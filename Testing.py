@@ -2,6 +2,7 @@
 
 from tkinter import *
 from tkinter.messagebox import *
+from tkinter.filedialog import *
 
 fenetre = Tk()
 
@@ -41,16 +42,16 @@ liste.insert(5, "Javascript")
 liste.pack()
 
 # canvas
-canvas = Canvas(fenetre, width=150, height=120, background='yellow')
-ligne1 = canvas.create_line(75, 0, 75, 120)
-ligne2 = canvas.create_line(0, 60, 150, 60)
-txt = canvas.create_text(75, 60, text="Cible", font="Arial 16 italic", fill="blue")
-canvas.pack()
+#canvas = Canvas(fenetre, width=150, height=120, background='yellow')
+#ligne1 = canvas.create_line(75, 0, 75, 120)
+#ligne2 = canvas.create_line(0, 60, 150, 60)
+#txt = canvas.create_text(75, 60, text="Cible", font="Arial 16 italic", fill="blue")
+#canvas.pack()
 
 # Scale
-value = DoubleVar()
-scale = Scale(fenetre, variable=value)
-scale.pack()
+#value = DoubleVar()
+#scale = Scale(fenetre, variable=value)
+#scale.pack()
 
 # Cadres
 fenetre['bg']='white'
@@ -95,31 +96,103 @@ def callback():
 Button(text='Action', command=callback).pack()
 
 # Alertes
-#def alert():
-#    showinfo("alerte", "Bravo!")
-#menubar = Menu(fenetre)
-#menu1 = Menu(menubar, tearoff=0)
-#menu1.add_command(label="Créer", command=alert)
-#menu1.add_command(label="Editer", command=alert)
-#menu1.add_separator()
-#menu1.add_command(label="Quitter", command=fenetre.quit)
-#menubar.add_cascade(label="Fichier", menu=menu1)
-#menu2 = Menu(menubar, tearoff=0)
-#menu2.add_command(label="Couper", command=alert)
-#menu2.add_command(label="Copier", command=alert)
-#menu2.add_command(label="Coller", command=alert)
-#menubar.add_cascade(label="Editer", menu=menu2)
-#menu3 = Menu(menubar, tearoff=0)
-#menu3.add_command(label="A propos", command=alert)
-#menubar.add_cascade(label="Aide", menu=menu3)
-#fenetre.config(menu=menubar)
-
+def alert():
+    showinfo("alerte", "Bravo!")
+menubar = Menu(fenetre)
+menu1 = Menu(menubar, tearoff=0)
+menu1.add_command(label="Creer", command=alert)
+menu1.add_command(label="Editer", command=alert)
+menu1.add_separator()
+menu1.add_command(label="Quitter", command=fenetre.quit)
+menubar.add_cascade(label="Fichier", menu=menu1)
+menu2 = Menu(menubar, tearoff=0)
+menu2.add_command(label="Couper", command=alert)
+menu2.add_command(label="Copier", command=alert)
+menu2.add_command(label="Coller", command=alert)
+menubar.add_cascade(label="Editer", menu=menu2)
+menu3 = Menu(menubar, tearoff=0)
+menu3.add_command(label="A propos", command=alert)
+menubar.add_cascade(label="Aide", menu=menu3)
+fenetre.config(menu=menubar)
+Button(text='menumenu', command=alert).pack()
 # Grid
-for ligne in range(5):
-    for colonne in range(5):
-        Button(fenetre, text='L%s-C%s' % (ligne, colonne), borderwidth=1).grid(row=ligne, column=colonne)
+#for ligne in range(5):
+#    for colonne in range(5):
+#        Button(fenetre, text='L%s-C%s' % (ligne, colonne), borderwidth=1).grid(row=ligne, column=colonne)
 
+#Button(fenetre, text='L1-C1', borderwidth=1).grid(row=1, column=1)
+#Button(fenetre, text='L1-C2', borderwidth=1).grid(row=1, column=2)
+#Button(fenetre, text='L2-C3', borderwidth=1).grid(row=2, column=3)
+#Button(fenetre, text='L2-C4', borderwidth=1).grid(row=2, column=4)
+#Button(fenetre, text='L3-C3', borderwidth=1).grid(row=3, column=3)
 
+# Image
+#photo = PhotoImage(file="ma_photo.png")
+#canvas = Canvas(fenetre,width=350, height=200)
+#canvas.create_image(0, 0, anchor=NW, image=photo)
+#canvas.pack()
 
+# Get Value OK
+def recupere():
+    print(entree.get())
+    showinfo("Alerte", entree.get())
+value = StringVar()
+value.set("Valeur")
+entree = Entry(fenetre, textvariable=value, width=30)
+entree.pack()
+bouton = Button(fenetre, text="Valider", command=recupere)
+bouton.pack()
+
+# Get Values from file OK
+# base:
+#filename = askopenfilename(title="Ouvrir votre document",filetypes=[('txt files','.txt'),('all files','.*')])
+#fichier = open(filename, "r")
+#content = fichier.read()
+#fichier.close()
+
+#Label(fenetre, text=content).pack(padx=10, pady=10)
+def get_values(Ok):
+    filename = askopenfilename(title="Ouvrir votre document",filetypes=[('txt files','.txt'),('all files','.*')])
+    fichier = open(filename, "r")
+    if Ok:
+        content = fichier.read()
+        fichier.close()
+        Label(fenetre, text=content, command=get_values).pack(padx=10, pady=10)
+        return null
+    else:
+        content = fichier.read()
+        fichier.close()
+        Label(fenetre, text="content retrieved", command=get_values).pack(padx=10, pady=10)
+        return content
+
+# events
+# fonction appellée lorsque l'utilisateur presse une touche
+def clavier(event):
+    global coords
+
+    touche = event.keysym
+
+    if touche == "Up":
+        coords = (coords[0], coords[1] - 10)
+    elif touche == "Down":
+        coords = (coords[0], coords[1] + 10)
+    elif touche == "Right":
+        coords = (coords[0] + 10, coords[1])
+    elif touche == "Left":
+        coords = (coords[0] -10, coords[1])
+    # changement de coordonnées pour le rectangle
+    canvas.coords(rectangle, coords[0], coords[1], coords[0]+25, coords[1]+25)
+
+# création du canvas
+#canvas = Canvas(fenetre, width=250, height=250, bg="ivory")
+# coordonnées initiales
+#coords = (0, 0)
+# création du rectangle
+#rectangle = canvas.create_rectangle(0,0,25,25,fill="violet")
+# ajout du bond sur les touches du clavier
+#canvas.focus_set()
+#canvas.bind("<Key>", clavier)
+# création du canvas
+#canvas.pack()
 
 fenetre.mainloop()
