@@ -19,9 +19,8 @@ import sys
 
 
 fenetre = Tk()
-
-label = Label(fenetre, text="Information visualisation")
-label.grid(row = 2, column = 0, sticky = W, columnspan = 2)
+fenetre.geometry("600x400")
+fenetre.title("Information Visualisation")
 
 
 MajorData = None
@@ -33,26 +32,26 @@ def ReadFile():
     print(fichier)
     MajorData = fichier
     return
-buttonRead = Button(fenetre, text="Import Data from *.csv", command=ReadFile).grid(row = 1, column = 0, sticky = W, columnspan = 2)
+buttonRead = Button(fenetre, text="Import Data from *.csv", command=ReadFile).grid(row = 0, column = 3, sticky = SW, columnspan = 2)
 
 
 # ClearData fonctionnel (meme si je pense qu'on override les previous data en faisant un deuxieume ReadFile)
 def ClearData():
     MajorData = None
     return
-button = Button(fenetre, text="Clear Imported Data from *.csv", command=ClearData).grid(row = 2, column = 0, sticky = W, columnspan = 2)
+button = Button(fenetre, text="Clear Imported Data from *.csv", command=ClearData).grid(row = 0, column = 5, sticky = W, columnspan = 2)
 
 
 # bouton de sortie => ne fonctionne pas chez moi
 def ExitTotal():
+    if messagebox.askokcancel("Quit", "Do you want to quit?"):
+        fenetre.destroy()
     fenetre.quit()
     sys.exit()
     return None
-bouton=Button(fenetre, text="Close", command=ExitTotal).grid(row = 3, column = 0, sticky = W, columnspan = 2)
+boutonExit=Button(fenetre, text="Close", command=ExitTotal).grid(row = 0, column = 7, sticky = W, columnspan = 2)
 
-def on_closing():
-    if messagebox.askokcancel("Quit", "Do you want to quit?"):
-        fenetre.destroy()
+
 
 
 
