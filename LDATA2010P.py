@@ -19,7 +19,7 @@ import sys
 
 
 fenetre = Tk()
-fenetre.geometry("600x400")
+fenetre.geometry("")
 fenetre.title("Information Visualisation")
 
 
@@ -42,7 +42,7 @@ def ClearData():
 button = Button(fenetre, text="Clear Imported Data from *.csv", command=ClearData).grid(row = 0, column = 5, sticky = W, columnspan = 2)
 
 
-# bouton de sortie => ne fonctionne pas chez moi
+# bouton de sortie fonctionnel
 def ExitTotal():
     if messagebox.askokcancel("Quit", "Do you want to quit?"):
         fenetre.destroy()
@@ -52,8 +52,22 @@ def ExitTotal():
 boutonExit=Button(fenetre, text="Close", command=ExitTotal).grid(row = 0, column = 7, sticky = W, columnspan = 2)
 
 
-
-
+# menu des fonctions display, faut plus que les fonctions
+# Create a menu button
+menubutton = Menubutton(fenetre, text="Display with")
+menubutton.grid()
+# Create pull down menu
+menubutton.menu = Menu(menubutton, tearoff = 0)
+menubutton["menu"] = menubutton.menu
+# Add some commands
+menubutton.menu.add_command(label="Force-Layout", command=ReadFile)
+menubutton.menu.add_command(label="Networkx")
+menubutton.menu.add_command(label="Infection map")
+menubutton.menu.add_command(label="Adjacency matrix")
+menubutton.menu.add_command(label="Number of interactions")
+menubutton.menu.add_separator()
+menubutton.menu.add_command(label="Exit")
+menubutton.grid()
 
 
 
