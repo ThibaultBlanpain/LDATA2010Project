@@ -1,57 +1,70 @@
-# coding: utf-8
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Oct 29 22:27:53 2020
+
+@author: thibaultblanpain
+"""
+import matplotlib.pyplot as plt 
+import networkx as nx 
+import numpy as np 
+import pandas as pd
+
+
 
 from tkinter import *
 from tkinter.messagebox import *
 from tkinter.filedialog import *
 
+
 fenetre = Tk()
 
-#label = Label(fenetre, text="Hello World")
-#label.pack()
+label = Label(fenetre, text="Hello World")
+label.pack()
 
 # bouton de sortie
 bouton=Button(fenetre, text="Fermer", command=fenetre.quit)
 bouton.pack()
 
 # entrée
-#value = StringVar()
-#value.set("texte par défaut")
-#entree = Entry(fenetre, textvariable=value, width=30)
-#entree.pack()
+value = StringVar()
+value.set("texte par défaut")
+entree = Entry(fenetre, textvariable=value, width=30)
+entree.pack()
 
 # checkbutton
-#bouton = Checkbutton(fenetre, text="Nouveau?")
-#bouton.pack()
+bouton = Checkbutton(fenetre, text="Nouveau?")
+bouton.pack()
 
 # radiobutton
-#value = StringVar()
-#bouton1 = Radiobutton(fenetre, text="Oui", variable=value, value=1)
-#bouton2 = Radiobutton(fenetre, text="Non", variable=value, value=2)
-#bouton3 = Radiobutton(fenetre, text="Peut être", variable=value, value=3)
-#bouton1.pack()
-#bouton2.pack()
-#bouton3.pack()
+value = StringVar()
+bouton1 = Radiobutton(fenetre, text="Oui", variable=value, value=1)
+bouton2 = Radiobutton(fenetre, text="Non", variable=value, value=2)
+bouton3 = Radiobutton(fenetre, text="Peut être", variable=value, value=3)
+bouton1.pack()
+bouton2.pack()
+bouton3.pack()
 
 # liste
 liste = Listbox(fenetre)
-liste.insert(1, "Python")
-liste.insert(2, "PHP")
-liste.insert(3, "jQuery")
-liste.insert(4, "CSS")
-liste.insert(5, "Javascript")
+liste.insert(1, "Force-Layout")
+liste.insert(2, "Networkx")
+liste.insert(3, "Infection map")
+liste.insert(4, "Adjacency matrix")
+liste.insert(5, "Number of interactions")
 liste.pack()
 
 # canvas
-#canvas = Canvas(fenetre, width=150, height=120, background='yellow')
-#ligne1 = canvas.create_line(75, 0, 75, 120)
-#ligne2 = canvas.create_line(0, 60, 150, 60)
-#txt = canvas.create_text(75, 60, text="Cible", font="Arial 16 italic", fill="blue")
-#canvas.pack()
+canvas = Canvas(fenetre, width=150, height=120, background='yellow')
+ligne1 = canvas.create_line(75, 0, 75, 120)
+ligne2 = canvas.create_line(0, 60, 150, 60)
+txt = canvas.create_text(75, 60, text="Cible", font="Arial 16 italic", fill="blue")
+canvas.pack()
 
 # Scale
-#value = DoubleVar()
-#scale = Scale(fenetre, variable=value)
-#scale.pack()
+value = DoubleVar()
+scale = Scale(fenetre, variable=value)
+scale.pack()
 
 # Cadres
 fenetre['bg']='white'
@@ -71,11 +84,11 @@ Label(Frame3, text="Frame 3",bg="white").pack(padx=10, pady=10)
 
 # Paned window
 p = PanedWindow(fenetre, orient=HORIZONTAL)
-p.pack(side=TOP, expand=Y, fill=BOTH, pady=2, padx=2)
-p.add(Label(p, text='Volet 1', background='blue', anchor=CENTER))
-p.add(Label(p, text='Volet 2', background='white', anchor=CENTER) )
-p.add(Label(p, text='Volet 3', background='red', anchor=CENTER) )
-p.pack()
+# p.pack(side=TOP, expand=Y, fill=BOTH, pady=2, padx=2)
+# p.add(Label(p, text='Volet 1', background='blue', anchor=CENTER))
+# p.add(Label(p, text='Volet 2', background='white', anchor=CENTER) )
+# p.add(Label(p, text='Volet 3', background='red', anchor=CENTER) )
+# p.pack()
 
 # Spinbox
 s = Spinbox(fenetre, from_=0, to=10)
@@ -115,6 +128,8 @@ menu3.add_command(label="A propos", command=alert)
 menubar.add_cascade(label="Aide", menu=menu3)
 fenetre.config(menu=menubar)
 Button(text='menumenu', command=alert).pack()
+
+
 # Grid
 #for ligne in range(5):
 #    for colonne in range(5):
@@ -145,25 +160,29 @@ bouton.pack()
 
 # Get Values from file OK
 # base:
-#filename = askopenfilename(title="Ouvrir votre document",filetypes=[('txt files','.txt'),('all files','.*')])
-#fichier = open(filename, "r")
-#content = fichier.read()
-#fichier.close()
+# def ReadFile():
+#     print("first")
+#     filename = askopenfilename(title="Ouvrir votre document",filetypes=[('csv files','.csv'),('all files','.*')])
+#     fichier = pd.read_csv(filename,sep=r'\s*,\s*')
+#     if fichier == null:
+#         return null
+#     print(fichier)
+#     return fichier
 
 #Label(fenetre, text=content).pack(padx=10, pady=10)
-def get_values(Ok):
-    filename = askopenfilename(title="Ouvrir votre document",filetypes=[('txt files','.txt'),('all files','.*')])
-    fichier = open(filename, "r")
-    if Ok:
-        content = fichier.read()
-        fichier.close()
-        Label(fenetre, text=content, command=get_values).pack(padx=10, pady=10)
-        return null
-    else:
-        content = fichier.read()
-        fichier.close()
-        Label(fenetre, text="content retrieved", command=get_values).pack(padx=10, pady=10)
-        return content
+# def get_values(Ok):
+#     filename = askopenfilename(title="Ouvrir votre document",filetypes=[('txt files','.txt'),('all files','.*')])
+#     fichier = open(filename, "r")
+#     if Ok:
+#         content = fichier.read()
+#         fichier.close()
+#         Label(fenetre, text=content, command=get_values).pack(padx=10, pady=10)
+#         return null
+#     else:
+#         content = fichier.read()
+#         fichier.close()
+#         Label(fenetre, text="content retrieved", command=get_values).pack(padx=10, pady=10)
+#         return content
 
 # events
 # fonction appellée lorsque l'utilisateur presse une touche
@@ -183,16 +202,20 @@ def clavier(event):
     # changement de coordonnées pour le rectangle
     canvas.coords(rectangle, coords[0], coords[1], coords[0]+25, coords[1]+25)
 
-# création du canvas
-#canvas = Canvas(fenetre, width=250, height=250, bg="ivory")
-# coordonnées initiales
-#coords = (0, 0)
-# création du rectangle
-#rectangle = canvas.create_rectangle(0,0,25,25,fill="violet")
-# ajout du bond sur les touches du clavier
-#canvas.focus_set()
-#canvas.bind("<Key>", clavier)
-# création du canvas
-#canvas.pack()
+#création du canvas
+canvas = Canvas(fenetre, width=250, height=250, bg="ivory")
+#coordonnées initiales
+coords = (0, 0)
+#création du rectangle
+rectangle = canvas.create_rectangle(0,0,25,25,fill="violet")
+#ajout du bond sur les touches du clavier
+canvas.focus_set()
+canvas.bind("<Key>", clavier)
+#création du canvas
+canvas.pack()
+
+#pas utile?
+def closeW():
+    fenetre.close()
 
 fenetre.mainloop()
