@@ -103,7 +103,7 @@ for i in range(N):
 G=nx.Graph()
 for i in range(N):
     G.add_node(i)
-    G.node[i]['pos']=(nodes[i].x,nodes[i].y)
+    G.nodes[i]['pos']=(nodes[i].x,nodes[i].y)
 for i in range(len(df['person1'])):
     if(df['infected1'][i]!=df['infected2'][i]):
         G.add_edge(df['person1'][i],df['person2'][i],color='red')
