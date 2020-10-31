@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import networkx as nx 
 import numpy as np 
 import pandas as pd
+from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
 
 from tkinter import *
@@ -16,6 +17,7 @@ from tkinter.messagebox import *
 from tkinter.filedialog import *
 from tkinter.ttk import *
 import sys
+
 
 
 fenetre = Tk()
@@ -32,7 +34,7 @@ def ReadFile():
     print(fichier)
     MajorData = fichier
     return
-buttonRead = Button(fenetre, text="Import Data from *.csv", command=ReadFile).grid(row = 0, column = 3, sticky = SW, columnspan = 2)
+buttonRead = Button(fenetre, text="Import Data from *.csv", command=ReadFile).grid(row = 0, column = 3, sticky = W, columnspan = 2)
 
 
 # ClearData fonctionnel (meme si je pense qu'on override les previous data en faisant un deuxieume ReadFile)
@@ -51,6 +53,28 @@ def ExitTotal():
     return None
 boutonExit=Button(fenetre, text="Close", command=ExitTotal).grid(row = 0, column = 7, sticky = W, columnspan = 2)
 
+#test plot
+
+def ploterT():
+    btn = Label(fenetre, text="specify plot title")
+    btn.grid(row=1, column=10, padx=20, pady=10)
+    
+    x = ['Col A', 'Col B', 'Col C']
+    y = [50, 20, 80]
+    
+    fig = plt.figure(figsize=(4, 5))
+    plt.bar(x=x, height=y)
+    
+    # specify the window as master
+    canvas = FigureCanvasTkAgg(fig, master=fenetre)
+    canvas.draw()
+    canvas.get_tk_widget().grid(row=2, column=10, ipadx=40, ipady=20)
+    
+    # navigation toolbar
+    toolbarFrame = Frame(master=fenetre)
+    toolbarFrame.grid(row=3,column=10)
+    toolbar = NavigationToolbar2Tk(canvas, toolbarFrame)
+    
 
 # menu des fonctions display, faut plus que les fonctions
 # Create a menu button
@@ -61,16 +85,23 @@ menubutton.menu = Menu(menubutton, tearoff = 0)
 menubutton["menu"] = menubutton.menu
 # Add some commands
 menubutton.menu.add_command(label="Force-Layout", command=ReadFile)
-menubutton.menu.add_command(label="Networkx")
+menubutton.menu.add_command(label="Networkx", command=ploterT)
 menubutton.menu.add_command(label="Infection map")
 menubutton.menu.add_command(label="Adjacency matrix")
 menubutton.menu.add_command(label="Number of interactions")
 menubutton.menu.add_separator()
 menubutton.menu.add_command(label="Exit")
-menubutton.grid()
+menubutton.grid(row=0, column=0)
 
 
 
+# plot ideas:
+# describe points plt.text(150, 6.5, r'Danger')
+# legende of curves plt.plot(x, y, "g", linewidth=0.8, marker="+", label="Trajet 2")
+# plt.legend()
+# arrow toward point plt.annotate('Limite', xy=(150, 7), xytext=(165, 5.5), 
+# arrowprops={'facecolor':'black', 'shrink':0.05} )
+# from: https://python.doctor/page-creer-graphiques-scientifiques-python-apprendre
 
 
 
