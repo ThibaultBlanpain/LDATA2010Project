@@ -57,9 +57,9 @@ boutonExit=Button(fenetre, text="Close", command=ExitTotal).grid(row = 0, column
 
 #test plot
 
-def ploterT():
+def ploterT(colnum):
     btn = Label(fenetre, text="specify plot title")
-    btn.grid(row=1, column=10, padx=20, pady=10)
+    btn.grid(row=1, column=colnum, padx=20, pady=10)
     
     x = ['Col A', 'Col B', 'Col C']
     y = [50, 20, 80]
@@ -70,11 +70,11 @@ def ploterT():
     # specify the window as master
     canvas = FigureCanvasTkAgg(fig, master=fenetre)
     canvas.draw()
-    canvas.get_tk_widget().grid(row=2, column=10, ipadx=40, ipady=20)
+    canvas.get_tk_widget().grid(row=2, column=colnum, ipadx=40, ipady=20)
     
     # navigation toolbar
     toolbarFrame = Frame(master=fenetre)
-    toolbarFrame.grid(row=3,column=10)
+    toolbarFrame.grid(row=3,column=colnum)
     toolbar = NavigationToolbar2Tk(canvas, toolbarFrame)
 
 #(rgb, hx) = colorchooser.askcolor()
@@ -98,7 +98,7 @@ menubutton.menu = Menu(menubutton, tearoff = 0)
 menubutton["menu"] = menubutton.menu
 # Add some commands
 menubutton.menu.add_command(label="Force-Layout", command=ReadFile)
-menubutton.menu.add_command(label="Networkx", command=ploterT)
+menubutton.menu.add_command(label="Networkx", command=lambda: ploterT(20))
 menubutton.menu.add_command(label="Infection map", command=clearPloter)
 menubutton.menu.add_command(label="Adjacency matrix")
 menubutton.menu.add_command(label="Number of interactions")
