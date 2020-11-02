@@ -16,6 +16,8 @@ from tkinter import *
 from tkinter.messagebox import *
 from tkinter.filedialog import *
 from tkinter.ttk import *
+from tkinter import colorchooser
+
 import sys
 
 
@@ -74,7 +76,10 @@ def ploterT():
     toolbarFrame = Frame(master=fenetre)
     toolbarFrame.grid(row=3,column=10)
     toolbar = NavigationToolbar2Tk(canvas, toolbarFrame)
-    
+
+#(rgb, hx) = colorchooser.askcolor()
+#print(rgb, hx)
+
 def clearPloter():
     
     return
@@ -97,6 +102,7 @@ menubutton.menu.add_command(label="Networkx", command=ploterT)
 menubutton.menu.add_command(label="Infection map", command=clearPloter)
 menubutton.menu.add_command(label="Adjacency matrix")
 menubutton.menu.add_command(label="Number of interactions")
+menubutton.menu.add_command(label="caracteristics of the plot blabla")
 menubutton.menu.add_separator()
 menubutton.menu.add_command(label="Exit")
 menubutton.grid(row=0, column=0)
