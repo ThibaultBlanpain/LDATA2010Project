@@ -24,14 +24,14 @@ fenetre = Tk()
 fenetre.geometry("")
 fenetre.title("Information Visualisation")
 
-
+global canvas
 MajorData = None
 
 # ReadFile fonctionnel (pour ios en tous cas)
 def ReadFile():
     filename = askopenfilename(title="Ouvrir votre document",filetypes=[('csv files','.csv'),('all files','.*')])
     fichier = pd.read_csv(filename,sep=r'\s*,\s*')
-    print(fichier)
+    print("file opened")
     MajorData = fichier
     return
 buttonRead = Button(fenetre, text="Import Data from *.csv", command=ReadFile).grid(row = 0, column = 3, sticky = W, columnspan = 2)
@@ -75,7 +75,15 @@ def ploterT():
     toolbarFrame.grid(row=3,column=10)
     toolbar = NavigationToolbar2Tk(canvas, toolbarFrame)
     
+def clearPloter():
+    
+    return
 
+###################################################################
+###################################################################
+# besoin de definir toutes les fonctions au dessus des menubutton
+###################################################################
+###################################################################
 # menu des fonctions display, faut plus que les fonctions
 # Create a menu button
 menubutton = Menubutton(fenetre, text="Display with")
@@ -86,7 +94,7 @@ menubutton["menu"] = menubutton.menu
 # Add some commands
 menubutton.menu.add_command(label="Force-Layout", command=ReadFile)
 menubutton.menu.add_command(label="Networkx", command=ploterT)
-menubutton.menu.add_command(label="Infection map")
+menubutton.menu.add_command(label="Infection map", command=clearPloter)
 menubutton.menu.add_command(label="Adjacency matrix")
 menubutton.menu.add_command(label="Number of interactions")
 menubutton.menu.add_separator()
