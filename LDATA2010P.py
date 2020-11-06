@@ -76,13 +76,11 @@ def ploterT(colnum):
     toolbarFrame = Frame(master=fenetre)
     toolbarFrame.grid(row=3,column=colnum)
     toolbar = NavigationToolbar2Tk(canvas, toolbarFrame)
+    plt.close("all")
 
 #(rgb, hx) = colorchooser.askcolor()
 #print(rgb, hx)
 
-def clearPloter():
-    
-    return
 
 ###################################################################
 ###################################################################
@@ -99,7 +97,7 @@ menubutton["menu"] = menubutton.menu
 # Add some commands
 menubutton.menu.add_command(label="Force-Layout", command=ReadFile)
 menubutton.menu.add_command(label="Networkx", command=lambda: ploterT(20))
-menubutton.menu.add_command(label="Infection map", command=clearPloter)
+menubutton.menu.add_command(label="Infection map")
 menubutton.menu.add_command(label="Adjacency matrix")
 menubutton.menu.add_command(label="Number of interactions")
 menubutton.menu.add_command(label="caracteristics of the plot blabla")
