@@ -23,11 +23,11 @@ class node:
 def main():
     #plt.ion()
     df = pandas.read_csv('Small_dataset.csv',sep=r'\s*,\s*')
-    nodes=ForceLayout(df,50,5000,1,0.004,10000)
-    G,colors=GraphG(df,nodes)
-    ForceGraph(df,nodes,G,colors)
-    Networkx(df,nodes,G,colors)
-    Hover(df,G)
+    nodes=ForceLayout(df,50,10000,1,0.004,10000)
+    G,colors,weigths,NN=GraphG(df,nodes,0,0,13)
+    ForceGraph(df,nodes,G,colors,weigths,NN)
+    Networkx(df,nodes,G,colors,weigths)
+    Hover(df,G,NN)
     #Netgraph(df,nodes,G)
     Map(df)
     AdjacencyMatrix(df)
@@ -122,55 +122,65 @@ for i in range(N):
     print("\n")
     plt.plot(nodes[i].x,nodes[i].y, 'o',color='black')    
 """
-def GraphG(df,nodes):
+def GraphG(df,nodes,degmin,timestart,timeend):
     M=len(df['person1'])
     G=nx.Graph()
     N1=df['person1'].max()
     N2=df['person2'].max()
     N=max(N1,N2)+1
+    widthmatr=np.zeros((N,N))
     for i in range(N):
         G.add_node(i)
     for i in range(M):
-        if(df['infected1'][i]!=df['infected2'][i]):
-            G.add_edge(df['person1'][i],df['person2'][i],color='red')
-        else:
-            G.add_edge(df['person1'][i],df['person2'][i],color='black')
-        
-
+        if((df['timestep'][i]>=timestart)and (df['timestep'][i]<=timeend)):
+            widthmatr[df['person1'][i]][df['person2'][i]]=widthmatr[df['person1'][i]][df['person2'][i]]+1
+            widthmatr[df['person2'][i]][df['person1'][i]]=widthmatr[df['person2'][i]][df['person1'][i]]+1
+            if(df['infected1'][i]!=df['infected2'][i]):
+                G.add_edge(df['person1'][i],df['person2'][i],color='red',width=widthmatr[df['person1'][i]][df['person2'][i]])
+            else:
+                G.add_edge(df['person1'][i],df['person2'][i],color='black',width=widthmatr[df['person1'][i]][df['person2'][i]])
+    NN=[1]*N 
+    for i in range(N):
+        if(G.degree(i)<degmin):
+            G.remove_node(i)
+            NN[i]=0
     colors = [G[u][v]['color'] for u,v in G.edges()]  
-    return G,colors
+    weights = [G[u][v]['width'] for u,v in G.edges()]  
+    print(widthmatr)
+    return G,colors,weights,NN
 
 #GRAPH Force-Layout
-def ForceGraph(df,nodes,G,colors):
+def ForceGraph(df,nodes,G,colors,weights,NN):
     N1=df['person1'].max()
     N2=df['person2'].max()
     N=max(N1,N2)+1
     for i in range(N):
-        G.nodes[i]['pos']=(nodes[i][0],nodes[i][1])
+        if(NN[i]==1):
+            G.nodes[i]['pos']=(nodes[i][0],nodes[i][1])
 
     plt.figure()    
     plt.title("Graph of interactions with force layout")
-    nx.draw(G,pos=nx.get_node_attributes(G, 'pos'),with_labels=True,font_weight='bold',edge_color=colors, width=2.5)
+    nx.draw(G,pos=nx.get_node_attributes(G, 'pos'),with_labels=True,font_weight='bold',edge_color=colors, width=weights)
 
 #GRAPH Networkx
-def Networkx(df,nodes,G,colors):
+def Networkx(df,nodes,G,colors,weigths):
     
     plt.figure()
     plt.title("Graph of interactions with networkx algorithm")
-    nx.draw(G,with_labels=True,font_weight='bold',edge_color=colors, width=2.5)
+    nx.draw(G,with_labels=True,font_weight='bold',edge_color=colors, width=weigths)
     
 #Bokeh    
-def Hover(df,G):
+def Hover(df,G,NN):
     N1=df['person1'].max()
     N2=df['person2'].max()
     N=max(N1,N2)+1
     homeok=[0]*N
     M=len(df['person1'])
     for i in range(M):
-        if(homeok[df['person1'][i]]==0):
+        if((NN[df['person1'][i]]==1)and(homeok[df['person1'][i]]==0)):
             G.nodes[df['person1'][i]]['home']=(df['home1_long'][i],df['home1_lat'][i])
             homeok[df['person1'][i]]=1
-        if(homeok[df['person2'][i]]==0):
+        if((NN[df['person2'][i]]==1)and(homeok[df['person2'][i]]==0)):
             G.nodes[df['person2'][i]]['home']=(df['home2_long'][i],df['home2_lat'][i])
             homeok[df['person2'][i]]=1
         
@@ -232,7 +242,7 @@ def Map(df):
                 if((df['loc_long'][i]==df['loc_long'][j]) and (df['loc_lat'][i]==df['loc_lat'][j])):
                     count=count+1
                     deja[j]=1
-            plt.scatter(df['loc_long'][i], df['loc_lat'][i], zorder=1, alpha= 1, c='black', s=100*count)            
+        plt.scatter(df['loc_long'][i], df['loc_lat'][i], zorder=1, alpha= 1, c='black', s=100*count)            
   
     plt.title('Infection map')
     plt.xlim(BBox[0],BBox[1])
