@@ -10,7 +10,10 @@ from bokeh.io import show
 from bokeh.models import Plot, Range1d, MultiLine, Circle, HoverTool, BoxZoomTool, ResetTool,PointDrawTool
 from bokeh.models.graphs import from_networkx
 from bokeh.palettes import Spectral4
-
+from grave import plot_network
+from grave.style import use_attributes
+from matplotlib.colors import LogNorm
+from matplotlib.colors import LinearSegmentedColormap
 
 """
 class node:
@@ -19,20 +22,23 @@ class node:
         self._y=random.random()*1 
         self._force_x=0
         self._force_y=0
-"""    
+"""   
+textvar= None 
 def main():
     #plt.ion()
-    df = pandas.read_csv('Small_dataset.csv',sep=r'\s*,\s*')
-    nodes=ForceLayout(df,50,10000,1,0.004,10000)
-    G,colors,weigths,NN=GraphG(df,nodes,0,0,13)
-    ForceGraph(df,nodes,G,colors,weigths,NN)
-    Networkx(df,nodes,G,colors,weigths)
-    Hover(df,G,NN)
+    c()
+    df = pandas.read_csv('scenario1.csv',sep=r'\s*,\s*')
+    timestepmax=df['timestep'][len(df['timestep'])-1]
+    #nodes=ForceLayout(df,50,10000,1,0.004,10000)
+    G,colors,weigths,NN=GraphG(df,0,0,timestepmax)
+    #ForceGraph(df,nodes,G,colors,weigths,NN)
+    #Networkx(df,G,colors,weigths)
+    #Hover(df,G,NN)
     #Netgraph(df,nodes,G)
-    Map(df)
+    #Map(df)
     AdjacencyMatrix(df)
-    Interplot(df)
-    BarChart(df)
+    #Interplot(df)
+    #BarChart(df)
     
 
 def ForceLayout(df,L,K_r,K_s,delta_t,MAX_DISPLACEMENT_SQUARED):
@@ -60,7 +66,7 @@ def ForceLayout(df,L,K_r,K_s,delta_t,MAX_DISPLACEMENT_SQUARED):
         neighbors[df['person1'][i]].add(df['person2'][i])
         neighbors[df['person2'][i]].add(df['person1'][i])
    
-    for a in range(10000): 
+    for a in range(1000): 
         # repulsion between all pairs
         for i1 in range(N-1):
             node1 = nodes[i1]
@@ -115,6 +121,7 @@ def ForceLayout(df,L,K_r,K_s,delta_t,MAX_DISPLACEMENT_SQUARED):
             node[1] = node[1] + dy
     return nodes        
 #PLOT    
+    
 """
 for i in range(N):
     print(nodes[i].x, nodes[i].y)
@@ -122,7 +129,9 @@ for i in range(N):
     print("\n")
     plt.plot(nodes[i].x,nodes[i].y, 'o',color='black')    
 """
-def GraphG(df,nodes,degmin,timestart,timeend):
+
+
+def GraphG(df,degmin,timestart,timeend):
     M=len(df['person1'])
     G=nx.Graph()
     N1=df['person1'].max()
@@ -130,7 +139,7 @@ def GraphG(df,nodes,degmin,timestart,timeend):
     N=max(N1,N2)+1
     widthmatr=np.zeros((N,N))
     for i in range(N):
-        G.add_node(i)
+        G.add_node(i,size=50,homelong=0,homelat=0)
     for i in range(M):
         if((df['timestep'][i]>=timestart)and (df['timestep'][i]<=timeend)):
             widthmatr[df['person1'][i]][df['person2'][i]]=widthmatr[df['person1'][i]][df['person2'][i]]+1
@@ -145,8 +154,12 @@ def GraphG(df,nodes,degmin,timestart,timeend):
             G.remove_node(i)
             NN[i]=0
     colors = [G[u][v]['color'] for u,v in G.edges()]  
-    weights = [G[u][v]['width'] for u,v in G.edges()]  
-    print(widthmatr)
+    weights = [G[u][v]['width'] for u,v in G.edges()]
+    for i in range(M):
+        G.nodes[df['person1'][i]]['homelong']=df['home1_long'][i]
+        G.nodes[df['person1'][i]]['homelat']=df['home1_lat'][i]
+        G.nodes[df['person2'][i]]['homelong']=df['home2_long'][i]
+        G.nodes[df['person2'][i]]['homelat']=df['home2_lat'][i]
     return G,colors,weights,NN
 
 #GRAPH Force-Layout
@@ -163,11 +176,15 @@ def ForceGraph(df,nodes,G,colors,weights,NN):
     nx.draw(G,pos=nx.get_node_attributes(G, 'pos'),with_labels=True,font_weight='bold',edge_color=colors, width=weights)
 
 #GRAPH Networkx
-def Networkx(df,nodes,G,colors,weigths):
-    
-    plt.figure()
+def Networkx(df,G,colors,weigths):
+    plt.ion()
+    fig, ax = plt.subplots()
     plt.title("Graph of interactions with networkx algorithm")
-    nx.draw(G,with_labels=True,font_weight='bold',edge_color=colors, width=weigths)
+    #nx.draw(G,with_labels=True,font_weight='bold',edge_color=colors, width=weigths)
+    art = plot_network(G, ax=ax,node_style=use_attributes(),
+                   edge_style=use_attributes())
+    art.set_picker(10)
+    fig.canvas.mpl_connect('pick_event', hilighter)
     
 #Bokeh    
 def Hover(df,G,NN):
@@ -261,7 +278,30 @@ def AdjacencyMatrix(df):
         p2=df['person2'][i]
         data[p1][p2]=(data[p1][p2])+1
         data[p2][p1]=(data[p2][p1])+1
-    az=sns.clustermap(data,cmap="YlGnBu")
+        
+    vmax=data.max()
+    boundaries = [0.0, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0]  # custom boundaries
+
+    # here I generated twice as many colors, 
+    # so that I could prune the boundaries more clearly
+    hex_colors = sns.light_palette('navy', n_colors=len(boundaries) * 2 + 2, as_cmap=False).as_hex()
+    hex_colors = [hex_colors[i] for i in range(0, len(hex_colors), 2)]
+
+    colors=list(zip(boundaries, hex_colors))
+
+    custom_color_map = LinearSegmentedColormap.from_list(
+    name='custom_navy',
+    colors=colors,
+    )
+
+    az=sns.clustermap(
+        vmin=0.0,
+        vmax=vmax,
+        data=data,
+        cmap=custom_color_map,
+        linewidths=0.75,
+  )
+    #az=sns.clustermap(data,cmap="YlGnBu")
     az.fig.suptitle('Adjacency matrix') 
 
 #Risky interactions plot
@@ -294,6 +334,37 @@ def BarChart(df):
     for i in range(N):
         plt.bar(str(index[i]),nbinter[i], align='center',color='blue')   
 
+def hilighter(event):
+    # if we did not hit a node, bail
+    if not hasattr(event, 'nodes') or not event.nodes:
+        return
+
+    # pull out the graph,
+    graph = event.artist.graph
+
+    # clear any non-default color on nodes
+    for node, attributes in graph.nodes.data():
+        attributes.pop('color', None)
+
+    #for u, v, attributes in graph.edges.data():
+      #  attributes.pop('width', None)
+
+    for node in event.nodes:
+        graph.nodes[node]['color'] = 'C1'
+
+        #for edge_attribute in graph[node].values():
+         #   edge_attribute['width'] = 3
+    for node in event.nodes:
+        global textvar
+        if(textvar!=None):
+            textvar.remove()
+        textvar=plt.text(0,0,'Home localisation \nid=%d \nlong=%f \nlat=%f' %(node,graph.nodes[node]['homelong'],graph.nodes[node]['homelat']),bbox={'facecolor': 'red', 'alpha': 0.5, 'pad': 10})
+        
+    # update the screen
+    event.artist.stale = True
+    event.artist.figure.canvas.draw_idle()
+       
+    
 def c():
     plt.close('all')
     
