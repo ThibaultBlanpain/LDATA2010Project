@@ -27,15 +27,16 @@ textvar= None
 def main():
     #plt.ion()
     c()
-    df = pandas.read_csv('scenario1.csv',sep=r'\s*,\s*')
+    df = pandas.read_csv('Small_dataset.csv',sep=r'\s*,\s*')
+    #df = pandas.read_csv('scenario1.csv',sep=r'\s*,\s*')
     timestepmax=df['timestep'][len(df['timestep'])-1]
     #nodes=ForceLayout(df,50,10000,1,0.004,10000)
     G,colors,weigths,NN=GraphG(df,0,0,timestepmax)
     #ForceGraph(df,nodes,G,colors,weigths,NN)
-    #Networkx(df,G,colors,weigths)
+    Networkx(df,G,colors,weigths)
     #Hover(df,G,NN)
     #Netgraph(df,nodes,G)
-    #Map(df)
+    #Map(df,0,timestepmax,5000)
     AdjacencyMatrix(df)
     #Interplot(df)
     #BarChart(df)
@@ -239,12 +240,26 @@ def Netgraph(df,nodes,G):
     plt_ins=netgraph.InteractiveGraph(G,node_positions=posdict,node_labels=labeldict)
 
 #MAP
-def Map(df):
+def Map(df,timestart,timeend,sizeref):
     M=len(df['person1'])
+    start=0
+    end=M
+    ds=0
+    de=0
+    if(df['timestep'][end-1]==timeend):
+        de=1
+    for i in range(M):
+        if ((df['timestep'][i]==timestart)and(ds==0)):
+            start=i
+            ds=1
+        if((de==0)and(df['timestep'][i]==timeend)and(df['timestep'][i+1]>timeend)):
+             end=i+1
+    ntot=end-start
     long_min=(df['loc_long'].min())
     long_max=(df['loc_long'].max())
     lat_min=(df['loc_lat'].min())
     lat_max=(df['loc_lat'].max())
+    print("%f %f %f %f\n",long_min,long_max,lat_min,lat_max)
     long_dif=(long_max-long_min)/4
     lat_dif=(lat_max-lat_min)/4
     BBox=(long_min-long_dif, long_max+long_dif,lat_min-lat_dif,lat_max+lat_dif)
@@ -252,19 +267,20 @@ def Map(df):
     map_m = plt.imread('map.png')
     plt.figure()
     deja=[0]*M
-    for i in range(M):
+    for i in range(start,end):
         if deja[i]==0:
             count=1
-            for j in range(i+1,M):
+            for j in range(i+1,end):
                 if((df['loc_long'][i]==df['loc_long'][j]) and (df['loc_lat'][i]==df['loc_lat'][j])):
                     count=count+1
                     deja[j]=1
-        plt.scatter(df['loc_long'][i], df['loc_lat'][i], zorder=1, alpha= 1, c='black', s=100*count)            
+        size=sizeref*count/ntot
+        plt.scatter(df['loc_long'][i], df['loc_lat'][i], zorder=1, alpha= 1, c='black', s=size)            
   
-    plt.title('Infection map')
+    plt.title('Interaction map')
     plt.xlim(BBox[0],BBox[1])
     plt.ylim(BBox[2],BBox[3])
-    plt.imshow(map_m, zorder=0, extent=BBox, aspect=2)
+    #plt.imshow(map_m, zorder=0, extent=BBox, aspect=2)
 
 #Adjacency Matrix
 def AdjacencyMatrix(df):
@@ -280,11 +296,12 @@ def AdjacencyMatrix(df):
         data[p2][p1]=(data[p2][p1])+1
         
     vmax=data.max()
+    """
     boundaries = [0.0, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0]  # custom boundaries
 
     # here I generated twice as many colors, 
     # so that I could prune the boundaries more clearly
-    hex_colors = sns.light_palette('navy', n_colors=len(boundaries) * 2 + 2, as_cmap=False).as_hex()
+    hex_colors = sns.light_palette("navy", n_colors=len(boundaries) * 2 + 2, as_cmap=False).as_hex()
     hex_colors = [hex_colors[i] for i in range(0, len(hex_colors), 2)]
 
     colors=list(zip(boundaries, hex_colors))
@@ -294,11 +311,12 @@ def AdjacencyMatrix(df):
     colors=colors,
     )
 
+   """
     az=sns.clustermap(
         vmin=0.0,
         vmax=vmax,
         data=data,
-        cmap=custom_color_map,
+        cmap="viridis_r",
         linewidths=0.75,
   )
     #az=sns.clustermap(data,cmap="YlGnBu")
