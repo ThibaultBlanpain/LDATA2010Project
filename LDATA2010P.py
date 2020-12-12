@@ -12,18 +12,19 @@ import pandas as pd
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
 
 
-from tkinter import *
+import tkinter as tk 
+from tkinter import ttk
 from tkinter.messagebox import *
 from tkinter.filedialog import *
 from tkinter.ttk import *
 from tkinter import colorchooser
+from tkinter.constants import *
 
 import sys
 
+# dash
 
-
-fenetre = Tk()
-fenetre.geometry("")
+fenetre = tk.Tk()
 fenetre.title("Information Visualisation")
 
 global canvas
@@ -36,14 +37,12 @@ def ReadFile():
     print("file opened")
     MajorData = fichier
     return
-buttonRead = Button(fenetre, text="Import Data from *.csv", command=ReadFile).grid(row = 0, column = 3, sticky = W, columnspan = 2)
 
 
 # ClearData fonctionnel (meme si je pense qu'on override les previous data en faisant un deuxieume ReadFile)
 def ClearData():
     MajorData = None
     return
-button = Button(fenetre, text="Clear Imported Data from *.csv", command=ClearData).grid(row = 0, column = 5, sticky = W, columnspan = 2)
 
 
 # bouton de sortie fonctionnel
@@ -53,7 +52,7 @@ def ExitTotal():
     fenetre.quit()
     sys.exit()
     return None
-boutonExit=Button(fenetre, text="Close", command=ExitTotal).grid(row = 0, column = 7, sticky = W, columnspan = 2)
+
 
 #test plot
 
@@ -64,23 +63,25 @@ def ploterT(colnum):
     x = ['Col A', 'Col B', 'Col C']
     y = [50, 20, 80]
     
-    fig = plt.figure(figsize=(4, 5))
+    fig = plt.figure(figsize=(3, 3))
     plt.bar(x=x, height=y)
     
     # specify the window as master
     canvas = FigureCanvasTkAgg(fig, master=fenetre)
     canvas.draw()
-    canvas.get_tk_widget().grid(row=2, column=colnum, ipadx=40, ipady=20)
+    canvas.get_tk_widget().grid(row=2, column=colnum, ipadx=40, ipady=20, Rowspan = 2, columnspan = 2)
     
     # navigation toolbar
     toolbarFrame = Frame(master=fenetre)
     toolbarFrame.grid(row=3,column=colnum)
     toolbar = NavigationToolbar2Tk(canvas, toolbarFrame)
+    #toolbar.update()
+    #canvas.get_tk_widget().pack()
     plt.close("all")
 
 #(rgb, hx) = colorchooser.askcolor()
 #print(rgb, hx)
-
+# dash
 
 ###################################################################
 ###################################################################
@@ -89,23 +90,52 @@ def ploterT(colnum):
 ###################################################################
 # menu des fonctions display, faut plus que les fonctions
 # Create a menu button
-menubutton = Menubutton(fenetre, text="Display with")
-menubutton.grid()
-# Create pull down menu
-menubutton.menu = Menu(menubutton, tearoff = 0)
-menubutton["menu"] = menubutton.menu
-# Add some commands
-menubutton.menu.add_command(label="Force-Layout", command=ReadFile)
-menubutton.menu.add_command(label="Networkx", command=lambda: ploterT(20))
-menubutton.menu.add_command(label="Infection map")
-menubutton.menu.add_command(label="Adjacency matrix")
-menubutton.menu.add_command(label="Number of interactions")
-menubutton.menu.add_command(label="caracteristics of the plot blabla")
-menubutton.menu.add_separator()
-menubutton.menu.add_command(label="Exit")
-menubutton.grid(row=0, column=0)
+# menubutton = Menubutton(fenetre, text="Display with", width=25)#, activebackground='red')
+# menubutton.grid(row = 1, column = 1, sticky = W, columnspan = 2)
+# # Create pull down menu
+# menubutton.menu = Menu(menubutton, tearoff = 0, bg="red")
+# menubutton["menu"] = menubutton.menu
+# # Add some commands
+# menubutton.menu.add_command(label="Force-Layout", command=ReadFile)
+# menubutton.menu.add_command(label="Networkx", command=lambda: ploterT(20))
+# menubutton.menu.add_command(label="Infection map")
+# menubutton.menu.add_command(label="Adjacency matrix")
+# menubutton.menu.add_command(label="Number of interactions")
+# menubutton.menu.add_command(label="caracteristics of the plot blabla")
+# menubutton.menu.add_separator()
+# menubutton.menu.add_command(label="Exit")
+# menubutton.grid(row=0, column=0)
+
+Separator(fenetre, orient=VERTICAL).grid(column=2, row=0, rowspan=20, sticky='ns')
+ttk.Sizegrip()
+
+buttonRead = Button(fenetre, text="Import Data from *.csv", command=ReadFile).grid(row = 2, column = 1, sticky = W, columnspan = 1)
+
+buttonClear = Button(fenetre, text="Clear Imported Data", command=ClearData).grid(row = 3, column = 1, sticky = W, columnspan = 1)
+
+boutonExit1=Button(fenetre, text="Networkx", command=ExitTotal).grid(row = 4, column = 1, sticky = W, columnspan = 1)
+
+boutonExit=Button(fenetre, text="Force-Layout", command=lambda: ploterT(20)).grid(row = 5, column = 1, sticky = W, columnspan = 1)
+
+boutonExit=Button(fenetre, text="Infection map", command=lambda: ploterT(20)).grid(row = 6, column = 1, sticky = W, columnspan = 1)
+
+boutonExit=Button(fenetre, text="Adjacency matrix", command=lambda: ploterT(20)).grid(row = 7, column = 1, sticky = W, columnspan = 1)
+
+boutonExit=Button(fenetre, text="Number of interactions", command=lambda: ploterT(20)).grid(row = 8, column = 1, sticky = W, columnspan = 1)
+
+boutonExit=Button(fenetre, text="caracteristics of the plot blabla", command=lambda: ploterT(20)).grid(row = 9, column = 1, sticky = W, columnspan = 1)
+
+boutonExit=Button(fenetre, text="Close", command=ExitTotal).grid(row = 10, column = 1, sticky = W, columnspan = 1)
 
 
+
+#fenetre.geometry('200x200')
+
+col_count, row_count = fenetre.grid_size()
+for col in range(col_count + 1):
+    fenetre.grid_columnconfigure(col, minsize=40)
+for row in range(row_count):
+    fenetre.grid_rowconfigure(row, minsize=40)
 
 # plot ideas:
 # describe points plt.text(150, 6.5, r'Danger')
@@ -329,4 +359,5 @@ menubutton.grid(row=0, column=0)
 def closeW():
     fenetre.close()
 
+fenetre.geometry("750x600")
 fenetre.mainloop()
