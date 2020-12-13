@@ -30,15 +30,15 @@ def main():
     df = pandas.read_csv('scenario1.csv',sep=r'\s*,\s*')
     timestepmax=df['timestep'][len(df['timestep'])-1]
     #nodes=ForceLayout(df,50,10000,1,0.004,10000)
-    G,colors,weigths,NN=GraphG(df,1,2,0,timestepmax)
+    G=GraphG(df,1,2,0,20)
     #ForceGraph(df,nodes,G,colors,weigths,NN)
-    Networkx(df,G,colors,weigths)
+    Networkx(df,G) 
     #Hover(df,G,NN)
     #Netgraph(df,nodes,G)
     Map(df,0,50,1,10000)
-    AdjacencyMatrix(df,30,40)
+    AdjacencyMatrix(df,0,timestepmax)
     Interplot(df)
-    #BarChart(df)
+    BarChart(df)
     
 
 def ForceLayout(df,L,K_r,K_s,delta_t,MAX_DISPLACEMENT_SQUARED):
@@ -119,18 +119,10 @@ def ForceLayout(df,L,K_r,K_s,delta_t,MAX_DISPLACEMENT_SQUARED):
                 dy = dy * s
             node[0] = node[0] + dx
             node[1] = node[1] + dy
-    return nodes        
-#PLOT    
-    
-"""
-for i in range(N):
-    print(nodes[i].x, nodes[i].y)
-    print(nodes[i].force_x, nodes[i].force_y)
-    print("\n")
-    plt.plot(nodes[i].x,nodes[i].y, 'o',color='black')    
-"""
+    return nodes 
 
-
+       
+#PLOT 
 def GraphG(df,degmin,widthmin,timestart,timeend):
     M=len(df['person1'])
     G=nx.Graph()
@@ -140,15 +132,6 @@ def GraphG(df,degmin,widthmin,timestart,timeend):
     intdict={}
     for i in range(N):
         G.add_node(i,size=50,homelong=0,homelat=0)
-    """for i in range(M):
-        if((df['timestep'][i]>=timestart) and (df['timestep'][i]<=timeend)):
-            widthmatr[df['person1'][i]][df['person2'][i]]=widthmatr[df['person1'][i]][df['person2'][i]]+1
-            widthmatr[df['person2'][i]][df['person1'][i]]=widthmatr[df['person2'][i]][df['person1'][i]]+1
-            if(df['infected1'][i]!=df['infected2'][i]):
-                G.add_edge(df['person1'][i],df['person2'][i],color='red',width=widthmatr[df['person1'][i]][df['person2'][i]])
-            else:
-                G.add_edge(df['person1'][i],df['person2'][i],color='black',width=widthmatr[df['person1'][i]][df['person2'][i]])
-    NN=[1]*N """
     for i in range(M):
         if((df['timestep'][i]>=timestart) and (df['timestep'][i]<=timeend)):
             pers1=df['person1'][i]
@@ -169,7 +152,6 @@ def GraphG(df,degmin,widthmin,timestart,timeend):
                 G.add_edge(key[0],key[1],color='red',width=min((value[0]/5),7))
             else:
                 G.add_edge(key[0],key[1],color='black',width=min((value[0]/5),7))
-    NN=[1]*N 
     for i in range(M):
         G.nodes[df['person1'][i]]['homelong']=df['home1_long'][i]
         G.nodes[df['person1'][i]]['homelat']=df['home1_lat'][i]
@@ -178,10 +160,10 @@ def GraphG(df,degmin,widthmin,timestart,timeend):
     for i in range(N):
         if(G.degree(i)<degmin):
             G.remove_node(i)
-            NN[i]=0
-    colors = [G[u][v]['color'] for u,v in G.edges()]  
-    weights = [G[u][v]['width'] for u,v in G.edges()]
-    return G,colors,weights,NN
+    d=dict(G.degree)
+    for k in d.keys():
+        G.nodes[k]['size'] = 20+10*d[k]
+    return G
 
 #GRAPH Force-Layout
 def ForceGraph(df,nodes,G,colors,weights,NN):
@@ -198,7 +180,7 @@ def ForceGraph(df,nodes,G,colors,weights,NN):
 
 
 #GRAPH Networkx
-def Networkx(df,G,colors,weigths):
+def Networkx(df,G):
     def spring_layout(networkx):
         """
         Let's build my own layout. It's going to be random, except for a handful
@@ -283,19 +265,11 @@ def Map(df,timestart,timeend,nbrmin,sizeref):
         if((de==0)and(df['timestep'][i]==timeend)and(df['timestep'][i+1]>timeend)):
              end=i+1
     ntot=end-start
-    """
-    long_min=(df['loc_long'].min())
-    long_max=(df['loc_long'].max())
-    lat_min=(df['loc_lat'].min())
-    lat_max=(df['loc_lat'].max())
-    print("%f %f %f %f\n",long_min,long_max,lat_min,lat_max)
-    long_dif=(long_max-long_min)/4
-    lat_dif=(lat_max-lat_min)/4 """
+
     BBox=(2.2468, 6.827,49.467,51.570)
     locdict={}
     map_m = plt.imread('belgium_map.png')
     plt.figure()
-    print("debut")
     for i in range(start,end):
         x= df['loc_long'][i]
         y= df['loc_lat'][i]
@@ -311,11 +285,9 @@ def Map(df,timestart,timeend,nbrmin,sizeref):
                     count=count+1
                     deja[j]=1
         size=sizeref*count/ntot """
-    print("fin")
     for key,value in locdict.items():
         if(value>=nbrmin) :    
             plt.scatter(key[0], key[1], zorder=1, alpha= 1, c='black', s=value*sizeref/ntot)  
-    print("finfin")
   
     plt.title('Interaction map')
     plt.xlim(BBox[0],BBox[1])
@@ -335,32 +307,15 @@ def AdjacencyMatrix(df,timemin,timemax):
             p2=df['person2'][i]
             data[p1][p2]=(data[p1][p2])+1
             data[p2][p1]=(data[p2][p1])+1
-        
-    vmax=data.max()
-    """
-    boundaries = [0.0, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0]  # custom boundaries
 
-    # here I generated twice as many colors, 
-    # so that I could prune the boundaries more clearly
-    hex_colors = sns.light_palette("navy", n_colors=len(boundaries) * 2 + 2, as_cmap=False).as_hex()
-    hex_colors = [hex_colors[i] for i in range(0, len(hex_colors), 2)]
-
-    colors=list(zip(boundaries, hex_colors))
-
-    custom_color_map = LinearSegmentedColormap.from_list(
-    name='custom_navy',
-    colors=colors,
-    )
-
-   """
     az=sns.clustermap(
         vmin=0.0,
-        vmax=vmax,
+        vmax=data.max(),
         data=data,
         cmap="viridis_r",
-        linewidths=0.75,
+        linewidths=0.0,
+        mask=(data==0)
   )
-    #az=sns.clustermap(data,cmap="YlGnBu")
     az.fig.suptitle('Adjacency matrix') 
 
 #Risky interactions plot
@@ -411,8 +366,9 @@ def hilighter(event):
     for node in event.nodes:
         graph.nodes[node]['color'] = 'C1'
 
-        #for edge_attribute in graph[node].values():
-         #   edge_attribute['width'] = 3
+    #for edge_attribute in graph[node].values():
+      #   edge_attribute['width'] = 3
+         
     for node in event.nodes:
         global textvar
         if(textvar!=None):
