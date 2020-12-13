@@ -27,18 +27,17 @@ textvar= None
 def main():
     #plt.ion()
     c()
-    df = pandas.read_csv('Small_dataset.csv',sep=r'\s*,\s*')
-    #df = pandas.read_csv('scenario1.csv',sep=r'\s*,\s*')
+    df = pandas.read_csv('scenario1.csv',sep=r'\s*,\s*')
     timestepmax=df['timestep'][len(df['timestep'])-1]
     #nodes=ForceLayout(df,50,10000,1,0.004,10000)
-    G,colors,weigths,NN=GraphG(df,0,0,timestepmax)
+    G,colors,weigths,NN=GraphG(df,1,2,0,timestepmax)
     #ForceGraph(df,nodes,G,colors,weigths,NN)
     Networkx(df,G,colors,weigths)
     #Hover(df,G,NN)
     #Netgraph(df,nodes,G)
-    #Map(df,0,timestepmax,5000)
-    AdjacencyMatrix(df)
-    #Interplot(df)
+    Map(df,0,50,1,10000)
+    AdjacencyMatrix(df,30,40)
+    Interplot(df)
     #BarChart(df)
     
 
@@ -132,35 +131,56 @@ for i in range(N):
 """
 
 
-def GraphG(df,degmin,timestart,timeend):
+def GraphG(df,degmin,widthmin,timestart,timeend):
     M=len(df['person1'])
     G=nx.Graph()
     N1=df['person1'].max()
     N2=df['person2'].max()
     N=max(N1,N2)+1
-    widthmatr=np.zeros((N,N))
+    intdict={}
     for i in range(N):
         G.add_node(i,size=50,homelong=0,homelat=0)
-    for i in range(M):
-        if((df['timestep'][i]>=timestart)and (df['timestep'][i]<=timeend)):
+    """for i in range(M):
+        if((df['timestep'][i]>=timestart) and (df['timestep'][i]<=timeend)):
             widthmatr[df['person1'][i]][df['person2'][i]]=widthmatr[df['person1'][i]][df['person2'][i]]+1
             widthmatr[df['person2'][i]][df['person1'][i]]=widthmatr[df['person2'][i]][df['person1'][i]]+1
             if(df['infected1'][i]!=df['infected2'][i]):
                 G.add_edge(df['person1'][i],df['person2'][i],color='red',width=widthmatr[df['person1'][i]][df['person2'][i]])
             else:
                 G.add_edge(df['person1'][i],df['person2'][i],color='black',width=widthmatr[df['person1'][i]][df['person2'][i]])
+    NN=[1]*N """
+    for i in range(M):
+        if((df['timestep'][i]>=timestart) and (df['timestep'][i]<=timeend)):
+            pers1=df['person1'][i]
+            pers2=df['person2'][i]
+            danger=0
+            if (df['infected1'][i]!=df['infected2'][i]):
+                danger=1
+            if (pers1,pers2) in intdict.keys():
+                if(intdict[(pers1,pers2)][1]==0):
+                    intdict[(pers1,pers2)]= (intdict[(pers1,pers2)][0]+1,danger)
+                else:
+                    intdict[(pers1,pers2)]= (intdict[(pers1,pers2)][0]+1,1)
+            else:
+                intdict[(pers1,pers2)]= (1,danger)
+    for key,value in intdict.items():
+        if(value[0]>widthmin):
+            if(value[1]==1):
+                G.add_edge(key[0],key[1],color='red',width=min((value[0]/5),7))
+            else:
+                G.add_edge(key[0],key[1],color='black',width=min((value[0]/5),7))
     NN=[1]*N 
+    for i in range(M):
+        G.nodes[df['person1'][i]]['homelong']=df['home1_long'][i]
+        G.nodes[df['person1'][i]]['homelat']=df['home1_lat'][i]
+        G.nodes[df['person2'][i]]['homelong']=df['home2_long'][i]
+        G.nodes[df['person2'][i]]['homelat']=df['home2_lat'][i]
     for i in range(N):
         if(G.degree(i)<degmin):
             G.remove_node(i)
             NN[i]=0
     colors = [G[u][v]['color'] for u,v in G.edges()]  
     weights = [G[u][v]['width'] for u,v in G.edges()]
-    for i in range(M):
-        G.nodes[df['person1'][i]]['homelong']=df['home1_long'][i]
-        G.nodes[df['person1'][i]]['homelat']=df['home1_lat'][i]
-        G.nodes[df['person2'][i]]['homelong']=df['home2_long'][i]
-        G.nodes[df['person2'][i]]['homelat']=df['home2_lat'][i]
     return G,colors,weights,NN
 
 #GRAPH Force-Layout
@@ -176,14 +196,22 @@ def ForceGraph(df,nodes,G,colors,weights,NN):
     plt.title("Graph of interactions with force layout")
     nx.draw(G,pos=nx.get_node_attributes(G, 'pos'),with_labels=True,font_weight='bold',edge_color=colors, width=weights)
 
+
 #GRAPH Networkx
 def Networkx(df,G,colors,weigths):
+    def spring_layout(networkx):
+        """
+        Let's build my own layout. It's going to be random, except for a handful
+        of points!
+        """
+        pos = nx.spring_layout(G,k=0.07,iterations=50)
+        return pos
+  
     plt.ion()
     fig, ax = plt.subplots()
     plt.title("Graph of interactions with networkx algorithm")
     #nx.draw(G,with_labels=True,font_weight='bold',edge_color=colors, width=weigths)
-    art = plot_network(G, ax=ax,node_style=use_attributes(),
-                   edge_style=use_attributes())
+    art = plot_network(G, layout=spring_layout, ax=ax,node_style=use_attributes(), edge_style=use_attributes())
     art.set_picker(10)
     fig.canvas.mpl_connect('pick_event', hilighter)
     
@@ -240,7 +268,7 @@ def Netgraph(df,nodes,G):
     plt_ins=netgraph.InteractiveGraph(G,node_positions=posdict,node_labels=labeldict)
 
 #MAP
-def Map(df,timestart,timeend,sizeref):
+def Map(df,timestart,timeend,nbrmin,sizeref):
     M=len(df['person1'])
     start=0
     end=M
@@ -255,45 +283,58 @@ def Map(df,timestart,timeend,sizeref):
         if((de==0)and(df['timestep'][i]==timeend)and(df['timestep'][i+1]>timeend)):
              end=i+1
     ntot=end-start
+    """
     long_min=(df['loc_long'].min())
     long_max=(df['loc_long'].max())
     lat_min=(df['loc_lat'].min())
     lat_max=(df['loc_lat'].max())
     print("%f %f %f %f\n",long_min,long_max,lat_min,lat_max)
     long_dif=(long_max-long_min)/4
-    lat_dif=(lat_max-lat_min)/4
-    BBox=(long_min-long_dif, long_max+long_dif,lat_min-lat_dif,lat_max+lat_dif)
-
-    map_m = plt.imread('map.png')
+    lat_dif=(lat_max-lat_min)/4 """
+    BBox=(2.2468, 6.827,49.467,51.570)
+    locdict={}
+    map_m = plt.imread('belgium_map.png')
     plt.figure()
-    deja=[0]*M
+    print("debut")
     for i in range(start,end):
-        if deja[i]==0:
+        x= df['loc_long'][i]
+        y= df['loc_lat'][i]
+        if (x,y) in locdict.keys():
+            locdict[(x,y)]=locdict[(x,y)]+1
+        else:
+            locdict[(x,y)]=1
+                
+    """  if deja[i]==0:
             count=1
             for j in range(i+1,end):
-                if((df['loc_long'][i]==df['loc_long'][j]) and (df['loc_lat'][i]==df['loc_lat'][j])):
+                if((df['loc_long'][i]==df['loc_long'][j]) and (==df['loc_lat'][j])):
                     count=count+1
                     deja[j]=1
-        size=sizeref*count/ntot
-        plt.scatter(df['loc_long'][i], df['loc_lat'][i], zorder=1, alpha= 1, c='black', s=size)            
+        size=sizeref*count/ntot """
+    print("fin")
+    for key,value in locdict.items():
+        if(value>=nbrmin) :    
+            plt.scatter(key[0], key[1], zorder=1, alpha= 1, c='black', s=value*sizeref/ntot)  
+    print("finfin")
   
     plt.title('Interaction map')
     plt.xlim(BBox[0],BBox[1])
     plt.ylim(BBox[2],BBox[3])
-    #plt.imshow(map_m, zorder=0, extent=BBox, aspect=2)
+    plt.imshow(map_m, zorder=0, extent=BBox, aspect=2)
 
 #Adjacency Matrix
-def AdjacencyMatrix(df):
+def AdjacencyMatrix(df,timemin,timemax):
     M=len(df['person1'])
     N1=df['person1'].max()
     N2=df['person2'].max()
     N=max(N1,N2)+1
     data=np.zeros((N,N))
     for i in range(M):
-        p1=df['person1'][i]
-        p2=df['person2'][i]
-        data[p1][p2]=(data[p1][p2])+1
-        data[p2][p1]=(data[p2][p1])+1
+        if((df['timestep'][i]>=timemin)and(df['timestep'][i]<=timemax)):
+            p1=df['person1'][i]
+            p2=df['person2'][i]
+            data[p1][p2]=(data[p1][p2])+1
+            data[p2][p1]=(data[p2][p1])+1
         
     vmax=data.max()
     """
@@ -376,7 +417,7 @@ def hilighter(event):
         global textvar
         if(textvar!=None):
             textvar.remove()
-        textvar=plt.text(0,0,'Home localisation \nid=%d \nlong=%f \nlat=%f' %(node,graph.nodes[node]['homelong'],graph.nodes[node]['homelat']),bbox={'facecolor': 'red', 'alpha': 0.5, 'pad': 10})
+        textvar=plt.text(1,1,'Home localisation \nid=%d \nlong=%f \nlat=%f' %(node,graph.nodes[node]['homelong'],graph.nodes[node]['homelat']),bbox={'facecolor': 'red', 'alpha': 0.5, 'pad': 10})
         
     # update the screen
     event.artist.stale = True
@@ -385,6 +426,8 @@ def hilighter(event):
     
 def c():
     plt.close('all')
+    
+main()
     
 
     
