@@ -27,17 +27,17 @@ textvar= None
 def main():
     #plt.ion()
     c()
-    df = pandas.read_csv('Small_dataset.csv',sep=r'\s*,\s*')
+    df = pandas.read_csv('Scenario1.csv',sep=r'\s*,\s*')
     #df = pandas.read_csv('scenario1.csv',sep=r'\s*,\s*')
     timestepmax=df['timestep'][len(df['timestep'])-1]
     #nodes=ForceLayout(df,50,10000,1,0.004,10000)
-    G,colors,weigths,NN=GraphG(df,0,0,timestepmax)
+    G,colors,weigths,NN=GraphG(df,2,30,40)
     #ForceGraph(df,nodes,G,colors,weigths,NN)
-    Networkx(df,G,colors,weigths)
+    #Networkx(df,G,colors,weigths)
     #Hover(df,G,NN)
     #Netgraph(df,nodes,G)
-    #Map(df,0,timestepmax,5000)
-    AdjacencyMatrix(df)
+    Map(df,0,timestepmax,2,10000)
+    #AdjacencyMatrix(df,30,40)
     #Interplot(df)
     #BarChart(df)
     
@@ -150,17 +150,17 @@ def GraphG(df,degmin,timestart,timeend):
             else:
                 G.add_edge(df['person1'][i],df['person2'][i],color='black',width=widthmatr[df['person1'][i]][df['person2'][i]])
     NN=[1]*N 
+    for i in range(M):
+        G.nodes[df['person1'][i]]['homelong']=df['home1_long'][i]
+        G.nodes[df['person1'][i]]['homelat']=df['home1_lat'][i]
+        G.nodes[df['person2'][i]]['homelong']=df['home2_long'][i]
+        G.nodes[df['person2'][i]]['homelat']=df['home2_lat'][i]
     for i in range(N):
         if(G.degree(i)<degmin):
             G.remove_node(i)
             NN[i]=0
     colors = [G[u][v]['color'] for u,v in G.edges()]  
     weights = [G[u][v]['width'] for u,v in G.edges()]
-    for i in range(M):
-        G.nodes[df['person1'][i]]['homelong']=df['home1_long'][i]
-        G.nodes[df['person1'][i]]['homelat']=df['home1_lat'][i]
-        G.nodes[df['person2'][i]]['homelong']=df['home2_long'][i]
-        G.nodes[df['person2'][i]]['homelat']=df['home2_lat'][i]
     return G,colors,weights,NN
 
 #GRAPH Force-Layout
@@ -182,7 +182,8 @@ def Networkx(df,G,colors,weigths):
     fig, ax = plt.subplots()
     plt.title("Graph of interactions with networkx algorithm")
     #nx.draw(G,with_labels=True,font_weight='bold',edge_color=colors, width=weigths)
-    art = plot_network(G, ax=ax,node_style=use_attributes(),
+    pos = nx.spring_layout(G)
+    art = plot_network(G, layout='spring', ax=ax,node_style=use_attributes(),
                    edge_style=use_attributes())
     art.set_picker(10)
     fig.canvas.mpl_connect('pick_event', hilighter)
@@ -240,7 +241,7 @@ def Netgraph(df,nodes,G):
     plt_ins=netgraph.InteractiveGraph(G,node_positions=posdict,node_labels=labeldict)
 
 #MAP
-def Map(df,timestart,timeend,sizeref):
+def Map(df,timestart,timeend,nbrmin,sizeref):
     M=len(df['person1'])
     start=0
     end=M
@@ -255,45 +256,59 @@ def Map(df,timestart,timeend,sizeref):
         if((de==0)and(df['timestep'][i]==timeend)and(df['timestep'][i+1]>timeend)):
              end=i+1
     ntot=end-start
+    """
     long_min=(df['loc_long'].min())
     long_max=(df['loc_long'].max())
     lat_min=(df['loc_lat'].min())
     lat_max=(df['loc_lat'].max())
     print("%f %f %f %f\n",long_min,long_max,lat_min,lat_max)
     long_dif=(long_max-long_min)/4
-    lat_dif=(lat_max-lat_min)/4
-    BBox=(long_min-long_dif, long_max+long_dif,lat_min-lat_dif,lat_max+lat_dif)
-
-    map_m = plt.imread('map.png')
+    lat_dif=(lat_max-lat_min)/4 """
+    BBox=(2.2468, 6.827,49.467,51.570)
+    locdict={}
+    map_m = plt.imread('belgium_map.png')
     plt.figure()
     deja=[0]*M
+    print("debut")
     for i in range(start,end):
-        if deja[i]==0:
+        x= df['loc_long'][i]
+        y= df['loc_lat'][i]
+        if (x,y) in locdict.keys():
+            locdict[(x,y)]=locdict[(x,y)]+1
+        else:
+            locdict[(x,y)]=1
+                
+    """  if deja[i]==0:
             count=1
             for j in range(i+1,end):
-                if((df['loc_long'][i]==df['loc_long'][j]) and (df['loc_lat'][i]==df['loc_lat'][j])):
+                if((df['loc_long'][i]==df['loc_long'][j]) and (==df['loc_lat'][j])):
                     count=count+1
                     deja[j]=1
-        size=sizeref*count/ntot
-        plt.scatter(df['loc_long'][i], df['loc_lat'][i], zorder=1, alpha= 1, c='black', s=size)            
+        size=sizeref*count/ntot """
+    print("fin")
+    for key,value in locdict.items():
+        if(value>=nbrmin) :    
+            plt.scatter(key[0], key[1], zorder=1, alpha= 1, c='black', s=value*sizeref/ntot)  
+    print("finfin")
   
     plt.title('Interaction map')
     plt.xlim(BBox[0],BBox[1])
     plt.ylim(BBox[2],BBox[3])
-    #plt.imshow(map_m, zorder=0, extent=BBox, aspect=2)
+    plt.imshow(map_m, zorder=0, extent=BBox, aspect=2)
 
 #Adjacency Matrix
-def AdjacencyMatrix(df):
+def AdjacencyMatrix(df,timemin,timemax):
     M=len(df['person1'])
     N1=df['person1'].max()
     N2=df['person2'].max()
     N=max(N1,N2)+1
     data=np.zeros((N,N))
     for i in range(M):
-        p1=df['person1'][i]
-        p2=df['person2'][i]
-        data[p1][p2]=(data[p1][p2])+1
-        data[p2][p1]=(data[p2][p1])+1
+        if((df['timestep'][i]>=timemin)and(df['timestep'][i]<=timemax)):
+            p1=df['person1'][i]
+            p2=df['person2'][i]
+            data[p1][p2]=(data[p1][p2])+1
+            data[p2][p1]=(data[p2][p1])+1
         
     vmax=data.max()
     """
@@ -385,6 +400,8 @@ def hilighter(event):
     
 def c():
     plt.close('all')
+    
+main()
     
 
     
