@@ -19,7 +19,7 @@ from tkinter.filedialog import *
 from tkinter.ttk import *
 from tkinter import colorchooser
 from tkinter.constants import *
-
+from tkinter import font as tkFont
 import sys
 
 # dash
@@ -27,8 +27,35 @@ import sys
 fenetre = tk.Tk()
 fenetre.title("Information Visualisation")
 
+
+
+MAX_DISPLACEMENT_SQUARED = 10000
+L = 50 #spring rest length
+K_r = 2000 #repulsive force constant
+K_s = 1  #spring constant
+delta_t = 0.004 # time step
+
+
+L = tk.StringVar(fenetre)
+MAX_DISPLACEMENT_SQUARED = tk.StringVar(fenetre)
+K_r = tk.StringVar(fenetre)
+K_s = tk.StringVar(fenetre)
+delta_t = tk.StringVar(fenetre)
+
+def get_the_parameters():
+    
+    return
+
+
+boutonPlot_Caracteristics=Button(fenetre, text="caracteristics of the plot blabla", command=lambda arg1 = "the main window", arg2 = "Caracteristics of the plot" : ploterT(arg1, arg2)).grid(row = 9, column = 1, sticky = W, columnspan = 1)
+
+
+
+
 global canvas
 MajorData = None
+
+fontt = tkFont.Font(family='Helvetica', size=36, weight='bold')
 
 # ReadFile fonctionnel (pour ios en tous cas)
 def ReadFile():
@@ -53,31 +80,57 @@ def ExitTotal():
     sys.exit()
     return None
 
+wherePP = "sb"
+
+def where(place):
+    global wherePP 
+    wherePP = place
+    if wherePP == "remove the graphs":
+        plt.close("all")
+    return
+
 
 #test plot
-
-def ploterT(colnum):
-    btn = Label(fenetre, text="specify plot title")
-    btn.grid(row=1, column=colnum, padx=20, pady=10)
-    
+whereplot = "zero"
+def ploterT(whereplot, title):
+    global wherePP
+    btn = Label(fenetre, text=title)
+    btn.grid(row=1, column=10, padx=20, pady=10)
     x = ['Col A', 'Col B', 'Col C']
     y = [50, 20, 80]
-    
+    if title == "po":
+        y = [0, 0, 300]
     fig = plt.figure(figsize=(3, 3))
     plt.bar(x=x, height=y)
     
     # specify the window as master
     canvas = FigureCanvasTkAgg(fig, master=fenetre)
     canvas.draw()
-    canvas.get_tk_widget().grid(row=2, column=colnum, ipadx=40, ipady=20, Rowspan = 2, columnspan = 2)
+    canvas.get_tk_widget().grid(row=4, column=7, rowspan = 7, columnspan = 7, ipadx=70, ipady=70, sticky="nsew")#, padx=40, pady=40, ipadx=40, ipady=40, sticky= E, rowspan = 1, columnspan = 3)
+    
     
     # navigation toolbar
     toolbarFrame = Frame(master=fenetre)
-    toolbarFrame.grid(row=3,column=colnum)
+    toolbarFrame.grid(row=11,column=10, columnspan = 3)
     toolbar = NavigationToolbar2Tk(canvas, toolbarFrame)
     #toolbar.update()
     #canvas.get_tk_widget().pack()
-    plt.close("all")
+    if wherePP == "the main window and another window":
+        return
+    if wherePP == "another window":
+        btn3 = Label(fenetre, text=title)
+        btn3.grid(row=13, column=1, padx=20, pady=10)
+        #for item in canvas.get_tk_widget().find_all():
+        canvas.get_tk_widget().pack_forget()
+        return
+    if wherePP == "the main window":
+        plt.close()
+    if wherePP == "remove the graphs":
+        canvas = None
+        btn2 = Label(fenetre, text=title)
+        btn2.grid(row=13, column=1, padx=20, pady=10)
+        plt.close("all")
+        return
 
 #(rgb, hx) = colorchooser.askcolor()
 #print(rgb, hx)
@@ -90,15 +143,12 @@ def ploterT(colnum):
 ###################################################################
 # menu des fonctions display, faut plus que les fonctions
 # Create a menu button
-# menubutton = Menubutton(fenetre, text="Display with", width=25)#, activebackground='red')
+# menubutton = Menubutton(fenetre, text="How to display the graph?")#, activebackground='red')
 # menubutton.grid(row = 1, column = 1, sticky = W, columnspan = 2)
-# # Create pull down menu
+# # # Create pull down menu
 # menubutton.menu = Menu(menubutton, tearoff = 0, bg="red")
 # menubutton["menu"] = menubutton.menu
 # # Add some commands
-# menubutton.menu.add_command(label="Force-Layout", command=ReadFile)
-# menubutton.menu.add_command(label="Networkx", command=lambda: ploterT(20))
-# menubutton.menu.add_command(label="Infection map")
 # menubutton.menu.add_command(label="Adjacency matrix")
 # menubutton.menu.add_command(label="Number of interactions")
 # menubutton.menu.add_command(label="caracteristics of the plot blabla")
@@ -109,23 +159,38 @@ def ploterT(colnum):
 Separator(fenetre, orient=VERTICAL).grid(column=2, row=0, rowspan=20, sticky='ns')
 ttk.Sizegrip()
 
-buttonRead = Button(fenetre, text="Import Data from *.csv", command=ReadFile).grid(row = 2, column = 1, sticky = W, columnspan = 1)
+
+buttonRead = Button(fenetre, text="Import Data from *.csv", command=ReadFile)
+buttonRead.grid(row = 2, column = 1, sticky = W, columnspan = 1)
 
 buttonClear = Button(fenetre, text="Clear Imported Data", command=ClearData).grid(row = 3, column = 1, sticky = W, columnspan = 1)
 
-boutonExit1=Button(fenetre, text="Networkx", command=ExitTotal).grid(row = 4, column = 1, sticky = W, columnspan = 1)
+boutonNextworkx=Button(fenetre, text="Networkx", command=lambda arg1 = "the main window", arg2 = "Networkx" : ploterT(arg1, arg2)).grid(row = 4, column = 1, sticky = W, columnspan = 1)
 
-boutonExit=Button(fenetre, text="Force-Layout", command=lambda: ploterT(20)).grid(row = 5, column = 1, sticky = W, columnspan = 1)
+boutonForce_Layout=Button(fenetre, text="Force-Layout", command=lambda arg1 = "the main window", arg2 = "Force-Layout" : ploterT(arg1, arg2)).grid(row = 5, column = 1, sticky = W, columnspan = 1)
 
-boutonExit=Button(fenetre, text="Infection map", command=lambda: ploterT(20)).grid(row = 6, column = 1, sticky = W, columnspan = 1)
+boutonInfection_Map=Button(fenetre, text="Infection map", command=lambda arg1 = "the main window", arg2 = "Infection map" : ploterT(arg1, arg2)).grid(row = 6, column = 1, sticky = W, columnspan = 1)
 
-boutonExit=Button(fenetre, text="Adjacency matrix", command=lambda: ploterT(20)).grid(row = 7, column = 1, sticky = W, columnspan = 1)
+boutonAdjacency_Matrix=Button(fenetre, text="Adjacency matrix", command=lambda arg1 = "the main window", arg2 = "Adjacency matrix" : ploterT(arg1, arg2)).grid(row = 7, column = 1, sticky = W, columnspan = 1)
 
-boutonExit=Button(fenetre, text="Number of interactions", command=lambda: ploterT(20)).grid(row = 8, column = 1, sticky = W, columnspan = 1)
+boutonIntercation_Number=Button(fenetre, text="Number of interactions", command=lambda arg1 = "the main window", arg2 = "Number of interaction" : ploterT(arg1, arg2)).grid(row = 8, column = 1, sticky = W, columnspan = 1)
 
-boutonExit=Button(fenetre, text="caracteristics of the plot blabla", command=lambda: ploterT(20)).grid(row = 9, column = 1, sticky = W, columnspan = 1)
+boutonPlot_Caracteristics=Button(fenetre, text="caracteristics of the plot blabla", command=lambda arg1 = "the main window", arg2 = "Caracteristics of the plot" : ploterT(arg1, arg2)).grid(row = 9, column = 1, sticky = W, columnspan = 1)
 
-boutonExit=Button(fenetre, text="Close", command=ExitTotal).grid(row = 10, column = 1, sticky = W, columnspan = 1)
+
+
+menubutton = Menubutton(fenetre, text="How to display the graph?")#, activebackground='red')
+menubutton.grid(row = 10, column = 1, sticky = 'ew', columnspan = 1)
+# # Create pull down menu
+menubutton.menu = Menu(menubutton, tearoff = 0, bg="red")
+menubutton["menu"] = menubutton.menu
+# # Add some commands
+menubutton.menu.add_command(label="in the main window", command=lambda arg1 = "the main window": where(arg1))
+menubutton.menu.add_command(label="in another window", command=lambda arg1 = "another window": where(arg1))
+menubutton.menu.add_command(label="in the main window and in another window", command=lambda arg1 = "in the main window and in another window": where(arg1))
+menubutton.menu.add_command(label="remove the graphs of other windows", command=lambda arg1 = "remove the graphs": where(arg1))
+
+boutonExit=Button(fenetre, text="Close", command=ExitTotal).grid(row = 11, column = 1, sticky = W, columnspan = 1)
 
 
 
