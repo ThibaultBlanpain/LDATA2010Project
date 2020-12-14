@@ -37,9 +37,14 @@ from matplotlib.colors import LinearSegmentedColormap
 
 # dash
 
+def bye(event):
+    #fenetre.attributes("-fullscreen", False)
+    fenetre.destroy()
+    sys.exit()
 fenetre = tk.Tk()
 fenetre.title("Information Visualisation")
 fenetre.attributes("-fullscreen", True)
+fenetre.bind("<Escape>", bye)
 
 
 
@@ -49,13 +54,13 @@ K_r = 2000 #repulsive force constant
 K_s = 1  #spring constant
 delta_t = 0.004 # time step
 
-
+"""
 L = tk.StringVar(fenetre)
 MAX_DISPLACEMENT_SQUARED = tk.StringVar(fenetre)
 K_r = tk.StringVar(fenetre)
 K_s = tk.StringVar(fenetre)
 delta_t = tk.StringVar(fenetre)
-
+"""
 def get_the_parameters():
     
     return
@@ -64,12 +69,18 @@ def get_the_parameters():
 #boutonPlot_Caracteristics=Button(fenetre, text="caracteristics of the plot blabla", command=lambda arg1 = "the main window", arg2 = "Caracteristics of the plot" : ploterT(arg1, arg2)).grid(row = 9, column = 1, sticky = W, columnspan = 1)
 
 
+#networkx->degmin,widthmin,timestart,timeend,k,ite + bouton homeloc/shortest path
+#map->timestart,timeend,nbrmin,sizeref
+#barchart->timemin,timemax
+#adjMatr->timemin,timemax
 
 
 global canvas
 MajorData = None
 timestepmax=0
 textvar= None 
+arg=None
+quelfig=0
 
 fontt = tkFont.Font(family='Helvetica', size=36, weight='bold')
 
@@ -140,7 +151,7 @@ def danslafen(title,fig):
     canvas = FigureCanvasTkAgg(fig, master=fenetre)
     canvas.draw()
     canvas.get_tk_widget().grid(row=4, column=7, rowspan = 7, columnspan = 7, ipadx=70, ipady=70, sticky="nsew")#, padx=40, pady=40, ipadx=40, ipady=40, sticky= E, rowspan = 1, columnspan = 3)
-    
+    #canvas.get_tk_widget().pack(side="top",fill='both',expand=True)
 
     # navigation toolbar
     toolbarFrame = Frame(master=fenetre)
@@ -175,8 +186,14 @@ def danslafen(title,fig):
 
 def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite):
     #waitcursor()
+    #global G
+    global arg
+    global quelfig
+    quelfig=1
     M=len(df['person1'])
-    G=nx.Graph()
+    G=nx.Graph(name="Interaction Graph")
+    arg=G
+    carac()
     N1=df['person1'].max()
     N2=df['person2'].max()
     N=max(N1,N2)+1
@@ -219,47 +236,15 @@ def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite):
     def spring_layout(networkx):
         pos = nx.spring_layout(G,k=k,iterations=ite)
         return pos
-  
     plt.ion()
     fig, ax = plt.subplots()
     plt.title("Graph of interactions with networkx algorithm")
     #nx.draw(G,with_labels=True,font_weight='bold',edge_color=colors, width=weigths)
     art = plot_network(G, layout=spring_layout, ax=ax,node_style=use_attributes(), edge_style=use_attributes())
+    #danslafen(title,fig)
     art.set_picker(10)
     fig.canvas.mpl_connect('pick_event', hilighter)
     
-    danslafen(title,fig)
-    
-"""
-     # specify the window as master
-    canvas = FigureCanvasTkAgg(fig, master=fenetre)
-    canvas.draw()
-    canvas.get_tk_widget().grid(row=4, column=7, rowspan = 7, columnspan = 7, ipadx=70, ipady=70, sticky="nsew")#, padx=40, pady=40, ipadx=40, ipady=40, sticky= E, rowspan = 1, columnspan = 3)
-    
-    
-    # navigation toolbar
-    toolbarFrame = Frame(master=fenetre)
-    toolbarFrame.grid(row=11,column=10, columnspan = 3)
-    toolbar = NavigationToolbar2Tk(canvas, toolbarFrame)
-    #toolbar.update()
-    #canvas.get_tk_widget().pack()
-    if wherePP == "the main window and another window":
-        return
-    if wherePP == "another window":
-        btn3 = Label(fenetre, text=title)
-        btn3.grid(row=13, column=1, padx=20, pady=10)
-        #for item in canvas.get_tk_widget().find_all():
-        canvas.get_tk_widget().pack_forget()
-        return
-    if wherePP == "the main window":
-        plt.close()
-    if wherePP == "remove the graphs":
-        canvas = None
-        btn2 = Label(fenetre, text=title)
-        btn2.grid(row=13, column=1, padx=20, pady=10)
-        plt.close("all")
-        return
- """   
     
     
 def hilighter(event):
@@ -323,13 +308,6 @@ def Map(df,title,timestart,timeend,nbrmin,sizeref):
         else:
             locdict[(x,y)]=1
                 
-    """  if deja[i]==0:
-            count=1
-            for j in range(i+1,end):
-                if((df['loc_long'][i]==df['loc_long'][j]) and (==df['loc_lat'][j])):
-                    count=count+1
-                    deja[j]=1
-        size=sizeref*count/ntot """
     for key,value in locdict.items():
         if(value>=nbrmin) :    
             plt.scatter(key[0], key[1], zorder=1, alpha= 1, c='black', s=value*sizeref/ntot)  
@@ -365,6 +343,9 @@ def BarChart(df,title,timemin,timemax):
     danslafen(title,fig)
 
 def AdjacencyMatrix(df,title,timemin,timemax):
+    global quelfig
+    quelfig=4
+    global arg
     M=len(df['person1'])
     N1=df['person1'].max()
     N2=df['person2'].max()
@@ -376,7 +357,8 @@ def AdjacencyMatrix(df,title,timemin,timemax):
             p2=df['person2'][i]
             data[p1][p2]=(data[p1][p2])+1
             data[p2][p1]=(data[p2][p1])+1
-    
+    arg=data
+    carac()
     az=sns.clustermap(
         vmin=0.0,
         vmax=data.max(),
@@ -384,12 +366,16 @@ def AdjacencyMatrix(df,title,timemin,timemax):
         cmap="viridis_r",
         linewidths=0.0,
         mask=(data==0),
-  )
+        figsize=(5,5)
+        )
     az.fig.suptitle('Adjacency matrix') 
     
     danslafen(title,az.fig)
 
 def Interplot(df,title):
+    global quelfig
+    quelfig=5
+    global arg
     M=len(df['person1'])
     T=df['timestep'].max()+1
     TimeI = [0]*T
@@ -401,6 +387,9 @@ def Interplot(df,title):
     plt.xlabel("Timestep")
     plt.ylabel("Risky intercations")
     plt.plot(TimeI)
+    
+    arg=TimeI
+    carac()
     
     danslafen(title,fig)
 
@@ -429,9 +418,35 @@ def Interplot(df,title):
 # menubutton.menu.add_command(label="Exit")
 # menubutton.grid(row=0, column=0)
     
+def caract(arg):
+    global quelfig
+    if(quelfig==1):
+        btn3 = Label(fenetre, text=nx.info(arg))
+        btn3.grid(row=15, column=1, padx=20, pady=10)
+    if(quelfig==5):
+        entry=tk.Entry(fenetre)
+        entry.grid(row=15,column=1,padx=20,pady=10)
+        def getInter():
+            x=int(entry.get())
+            label1 = tk.Label(fenetre, text=arg[x])
+            label1.grid(row=16,column=1,padx=20,pady=10)
+        button1 = tk.Button(text='Get number of risky interactions', command=getInter)
+        button1.grid(row=17,column=1,padx=20,pady=10)
+    if(quelfig==4):
+        f1 = tk.Frame(fenetre)
+        entry1=tk.Entry(f1)
+        entry2=tk.Entry(f1)
+        f1.grid(row=15,column=1,padx=20,pady=10)
+        def getInterx1x2():
+            
+            x1=int(entry1.get())
+            x2=int(entry2.get())
+            label1 = tk.Label(fenetre, text=arg[x1][x2])
+            label1.grid(row=16,column=1,padx=20,pady=10)
+        button1 = tk.Button(text='Get number of interactions between id1 and id2', command=getInterx1x2)
+        button1.grid(row=17,column=1,padx=20,pady=10)
 
-
-Separator(fenetre, orient=VERTICAL).grid(column=2, row=0, rowspan=20, sticky='ns')
+Separator(fenetre, orient=VERTICAL).grid(column=2, row=0, rowspan=40, sticky='ns')
 ttk.Sizegrip()
 
 
@@ -440,7 +455,7 @@ buttonRead.grid(row = 2, column = 1, sticky = W, columnspan = 1)
 
 buttonClear = Button(fenetre, text="Clear Imported Data", command=ClearData).grid(row = 3, column = 1, sticky = W, columnspan = 1)
 def showbuttons():
-    boutonNextworkx=Button(fenetre, text="Networkx", command=lambda df=MajorData, title = "Networkx", degmin=1,widthmin=1,timemin=0,timemax=timestepmax,k=0.05,iterations=50 : Networkx(df,title,degmin,widthmin,timemin,timemax,k,iterations)).grid(row = 4, column = 1, sticky = W, columnspan = 1)
+    boutonNextworkx=Button(fenetre, text="Graph", command=lambda df=MajorData, title = "Graph", degmin=1,widthmin=1,timemin=0,timemax=timestepmax,k=0.05,iterations=50 : Networkx(df,title,degmin,widthmin,timemin,timemax,k,iterations)).grid(row = 4, column = 1, sticky = W, columnspan = 1)
 
     #boutonForce_Layout=Button(fenetre, text="Force-Layout", command=lambda arg1 = "the main window", arg2 = "Force-Layout" : ploterT(arg1, arg2)).grid(row = 5, column = 1, sticky = W, columnspan = 1)
 
@@ -451,8 +466,8 @@ def showbuttons():
     boutonAdjacency_Matrix=Button(fenetre, text="Adjacency matrix", command=lambda df = MajorData, title = "Adjacency matrix" ,timemin=0,timemax=timestepmax: AdjacencyMatrix(df,title,timemin,timemax)).grid(row = 7, column = 1, sticky = W, columnspan = 1)
 
     boutonIntercation_Number=Button(fenetre, text="Number of risky interactions", command=lambda df=MajorData, title = "Number of risky interactions" : Interplot(df, title)).grid(row = 8, column = 1, sticky = W, columnspan = 1)
-
-    boutonPlot_Caracteristics=Button(fenetre, text="caracteristics of the plot blabla", command=lambda arg1 = "the main window", arg2 = "Caracteristics of the plot" : ploterT(arg1, arg2)).grid(row = 9, column = 1, sticky = W, columnspan = 1)
+def carac():
+    boutonPlot_Caracteristics=Button(fenetre, text="Caracteristics of the plot ", command=lambda arg1 = arg : caract(arg1)).grid(row = 9, column = 1, sticky = W, columnspan = 1)
 
 
 
