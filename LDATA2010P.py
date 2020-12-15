@@ -257,8 +257,6 @@ def ess(func):
         
         val = Button(fenetre, text='validate', command=lambda arg1 = user_inputtimS, arg2 = user_inputtimE, arg3 = user_inputtimNbrm, arg4 = user_inputtimSizer, arg5 = None, arg6 = None : valid(arg1,arg2, arg3, arg4, arg5, arg6))
         val.grid(row = 17, column = 1)
-        
-        print("1")
     
     if(func == "Number of interactions"): #(modify color)
         user_inputtimMi = tk.StringVar(fenetre)
@@ -272,7 +270,6 @@ def ess(func):
         
         val = Button(fenetre, text='validate', command=lambda arg1 = user_inputtimMi, arg2 = user_inputtimMa, arg3 = None, arg4 = None, arg5 = None, arg6 = None : valid(arg1,arg2, arg3, arg4, arg5, arg6))
         val.grid(row = 15, column = 1)
-        print("2")
     
     if(func == "Adjacency matrix"):
         user_inputtimMi = tk.StringVar(fenetre)
@@ -286,7 +283,6 @@ def ess(func):
         
         val = Button(fenetre, text='validate', command=lambda arg1 = user_inputtimMi, arg2 = user_inputtimMa, arg3 = None, arg4 = None, arg5 = None, arg6 = None : valid(arg1,arg2, arg3, arg4, arg5, arg6))
         val.grid(row = 15, column = 1)
-        print("3")
     
     # user_input1 = tk.StringVar(fenetre)
     # entry1 = tk.Entry(fenetre, textvariable=user_input1).grid(row = 12, column = 1)
