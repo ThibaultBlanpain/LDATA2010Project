@@ -1,16 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Dec 14 10:42:32 2020
-
-@author: franc
-"""
-
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
 Created on Thu Oct 29 22:27:53 2020
 
-@author: thibaultblanpain
+@author: thibaultblanpain & francoisdawance
 """
 import matplotlib.pyplot as plt 
 import networkx as nx 
@@ -96,6 +88,7 @@ label2=None
 button3=None
 entry3=None
 label3=None
+buttonopt=None
 nodescolor={}
 edgescolor={}
 edgeswidth={}
@@ -221,6 +214,7 @@ def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite,infectedonly):
     global arg
     global quelfig
     quelfig=1
+    global buttonopt
     M=len(df['person1'])
     G=nx.Graph(name="Interaction Graph")
     N1=df['person1'].max()
@@ -276,6 +270,12 @@ def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite,infectedonly):
         g[1]['color'] = blues(g[1]['degtot']/max_value)
     arg=G        
     carac()
+    def changeopt():
+        global opt
+        opt=1-opt
+    buttonopt = tk.Button(text="Change opt", command=changeopt)
+    buttonopt.grid(row=7,column=4,padx=20,pady=10)
+    
     def spring_layout(networkx):
         pos = nx.spring_layout(G,k=k,iterations=ite)
         return pos
@@ -316,9 +316,9 @@ def hilighter(event):
         for node in nodescolor.keys():
             graph.nodes[node]['color'] = nodescolor[node]
         nodescolor={}
-        for node in event.nodes:
-            nodescolor[node]=graph.nodes[node]['color']
-            graph.nodes[node]['color'] = 'red'
+        node = event.nodes[0]
+        nodescolor[node]=graph.nodes[node]['color']
+        graph.nodes[node]['color'] = 'red'
 
          
         for node in event.nodes:
@@ -655,6 +655,9 @@ def destroyoptions():
         entry3.destroy()
         if(label3!=None):
             label3.destroy()
+    global buttonopt
+    if(buttonopt!=None):
+        buttonopt.destroy()
 
 Separator(fenetre, orient=VERTICAL).grid(column=2, row=0, rowspan=40, sticky='ns')
 ttk.Sizegrip()
