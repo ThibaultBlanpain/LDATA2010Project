@@ -49,7 +49,7 @@ def get_the_parameters():
     return
 
 
-boutonPlot_Caracteristics=Button(fenetre, text="caracteristics of the plot blabla", command=lambda arg1 = "the main window", arg2 = "Caracteristics of the plot" : ploterT(arg1, arg2)).grid(row = 9, column = 1, sticky = W, columnspan = 1)
+#boutonPlot_Caracteristics=Button(fenetre, text="caracteristics of the plot blabla", command=lambda arg1 = "the main window", arg2 = "Caracteristics of the plot" : ploterT(arg1, arg2)).grid(row = 9, column = 1, sticky = W, columnspan = 1)
 
 
 
@@ -170,8 +170,25 @@ answer = 3
 #barchart->timemin,timemax
 #adjMatr->timemin,timemax
 
+
+
 def valid(arg1, arg2, arg3, arg4, arg5, arg6):
-    global degmin,widthmin,timestart,timeend,k,ite
+    global degmin,widthmin,timestart,timeend,k,ite,timestart,timeend,nbrmin,sizeref,timemin,timemax
+    #,timemin,timemax
+    
+    if arg3 == None:
+        timemin = int(arg1.get())
+        timemax = int(arg2.get())
+        print(timemin,timemax)
+        return
+    
+    if arg5 == None:
+        timestart = int(arg1.get())
+        timeend = int(arg2.get())
+        nbrmin = int(arg3.get())
+        sizeref = int(arg4.get())
+        print(timestart,timeend,nbrmin,sizeref)
+        return
     
     degmin = int(arg1.get())
     widthmin = int(arg2.get())
@@ -182,7 +199,14 @@ def valid(arg1, arg2, arg3, arg4, arg5, arg6):
     print(degmin,widthmin,timestart,timeend,k,ite)
     
 
+val = Button(fenetre, text='enchant')
+
 def ess(func):
+    
+    global val
+    if val != None:
+        val.destroy()
+        
     
     if(func == "networkx"):
         user_inputdeg = tk.StringVar(fenetre)
@@ -196,27 +220,72 @@ def ess(func):
         # check = tk.Button(fenetre, text='check 3', command=lambda arg1   = user_input1 : verify(arg1))
         # check.grid(row = 13, column = 1)
         
+        DeMin = Label(fenetre, text = "Minimal degree").grid(row=13,column=1,sticky=W)
+        Lam = Label(fenetre, text = "Minimal width").grid(row=14,column=1,sticky=W)
+        TS = Label(fenetre, text = "Starting time").grid(row=15,column=1,sticky=W)
+        TE = Label(fenetre, text = "Ending time").grid(row=16,column=1,sticky=W)
+        kK = Label(fenetre, text = "K value").grid(row=17,column=1,sticky=W)
+        ITE = Label(fenetre, text = "Number of iter").grid(row=18,column=1,sticky=W)
+        
+        degmin = tk.Entry(fenetre, textvariable=user_inputdeg, width=8).grid(row = 13, column = 1, sticky=E)
+        widthmin = tk.Entry(fenetre,textvariable=user_inputwid, width=8).grid(row = 14, column = 1, sticky=E)
+        timestart = tk.Entry(fenetre, textvariable=user_inputtimS, width=8).grid(row = 15, column = 1, sticky=E)
+        timeend = tk.Entry(fenetre, textvariable=user_inputtimE, width=8).grid(row = 16, column = 1, sticky=E)
+        k = tk.Entry(fenetre,textvariable=user_inputk, width=8).grid(row = 17, column = 1, sticky=E)
+        ite = tk.Entry(fenetre,textvariable=user_inputite, width=8).grid(row = 18, column = 1, sticky=E)
         
         
-        degmin = tk.Entry(fenetre, textvariable=user_inputdeg).grid(row = 13, column = 1)
-        widthmin = tk.Entry(fenetre,textvariable=user_inputwid).grid(row = 14, column = 1)
-        timestart = tk.Entry(fenetre, textvariable=user_inputtimS).grid(row = 15, column = 1)
-        timeend = tk.Entry(fenetre, textvariable=user_inputtimE).grid(row = 16, column = 1)
-        k = tk.Entry(fenetre,textvariable=user_inputk).grid(row = 17, column = 1)
-        ite = tk.Entry(fenetre,textvariable=user_inputite).grid(row = 18, column = 1)
-        
-        
-        val = Button(fenetre, text='new values for the network graph', command=lambda arg1 = user_inputdeg, arg2 = user_inputwid, arg3 = user_inputtimS, arg4 = user_inputtimE, arg5 = user_inputk, arg6 = user_inputite : valid(arg1,arg2, arg3, arg4, arg5, arg6))
+        val = Button(fenetre, text='validate', command=lambda arg1 = user_inputdeg, arg2 = user_inputwid, arg3 = user_inputtimS, arg4 = user_inputtimE, arg5 = user_inputk, arg6 = user_inputite : valid(arg1,arg2, arg3, arg4, arg5, arg6))
         val.grid(row = 19, column = 1)
         
         
     if(func == "Infection map"):
+        user_inputtimS = tk.StringVar(fenetre)
+        user_inputtimE = tk.StringVar(fenetre)
+        user_inputtimNbrm = tk.StringVar(fenetre)
+        user_inputtimSizer = tk.StringVar(fenetre)
+        
+        TS = Label(fenetre, text = "Starting time").grid(row=13,column=1,sticky=W)
+        TE = Label(fenetre, text = "Ending time").grid(row=14,column=1,sticky=W)
+        NM = Label(fenetre, text = "Minimal number").grid(row=15,column=1,sticky=W)
+        SR = Label(fenetre, text = "Size of reference").grid(row=16,column=1,sticky=W)
+        
+        timestart = tk.Entry(fenetre, textvariable=user_inputtimS, width=8).grid(row = 13, column = 1, sticky=E)
+        timeend = tk.Entry(fenetre,textvariable=user_inputtimE, width=8).grid(row = 14, column = 1, sticky=E)
+        nbrmin = tk.Entry(fenetre, textvariable=user_inputtimNbrm, width=8).grid(row = 15, column = 1, sticky=E)
+        sizeref = tk.Entry(fenetre, textvariable=user_inputtimSizer, width=8).grid(row = 16, column = 1, sticky=E)
+        
+        val = Button(fenetre, text='validate', command=lambda arg1 = user_inputtimS, arg2 = user_inputtimE, arg3 = user_inputtimNbrm, arg4 = user_inputtimSizer, arg5 = None, arg6 = None : valid(arg1,arg2, arg3, arg4, arg5, arg6))
+        val.grid(row = 17, column = 1)
+        
         print("1")
     
-    if(func == "barchart"): #(modify color)
+    if(func == "Number of interactions"): #(modify color)
+        user_inputtimMi = tk.StringVar(fenetre)
+        user_inputtimMa = tk.StringVar(fenetre)
+        
+        TS = Label(fenetre, text = "Starting time").grid(row=13,column=1,sticky=W)
+        TE = Label(fenetre, text = "Ending time").grid(row=14,column=1,sticky=W)
+        
+        timestart = tk.Entry(fenetre, textvariable=user_inputtimMi, width=8).grid(row = 13, column = 1, sticky=E)
+        timeend = tk.Entry(fenetre,textvariable=user_inputtimMa, width=8).grid(row = 14, column = 1, sticky=E)
+        
+        val = Button(fenetre, text='validate', command=lambda arg1 = user_inputtimMi, arg2 = user_inputtimMa, arg3 = None, arg4 = None, arg5 = None, arg6 = None : valid(arg1,arg2, arg3, arg4, arg5, arg6))
+        val.grid(row = 15, column = 1)
         print("2")
     
-    if(func == "adjMatr"):
+    if(func == "Adjacency matrix"):
+        user_inputtimMi = tk.StringVar(fenetre)
+        user_inputtimMa = tk.StringVar(fenetre)
+        
+        TS = Label(fenetre, text = "Starting time").grid(row=13,column=1,sticky=W)
+        TE = Label(fenetre, text = "Ending time").grid(row=14,column=1,sticky=W)
+        
+        timestart = tk.Entry(fenetre, textvariable=user_inputtimMi, width=8).grid(row = 13, column = 1, sticky=E)
+        timeend = tk.Entry(fenetre,textvariable=user_inputtimMa, width=8).grid(row = 14, column = 1, sticky=E)
+        
+        val = Button(fenetre, text='validate', command=lambda arg1 = user_inputtimMi, arg2 = user_inputtimMa, arg3 = None, arg4 = None, arg5 = None, arg6 = None : valid(arg1,arg2, arg3, arg4, arg5, arg6))
+        val.grid(row = 15, column = 1)
         print("3")
     
     # user_input1 = tk.StringVar(fenetre)
@@ -267,7 +336,23 @@ boutonAdjacency_Matrix=Button(fenetre, text="Adjacency matrix", command=lambda a
 
 boutonIntercation_Number=Button(fenetre, text="Number of interactions", command=lambda arg1 = "the main window", arg2 = "Number of interaction" : ploterT(arg1, arg2)).grid(row = 8, column = 1, sticky = W, columnspan = 1)
 
-boutonPlot_Caracteristics=Button(fenetre, text="caracteristics of the plot blabla", command= lambda arg1 = "networkx" : ess(arg1)).grid(row = 9, column = 1, sticky = W, columnspan = 1)
+
+menubutton = Menubutton(fenetre, text="Modify parameters of ")#, activebackground='red')
+menubutton.grid(row = 9, column = 1, sticky = 'ew', columnspan = 1)
+# # Create pull down menu
+menubutton.menu = Menu(menubutton, tearoff = 0)
+menubutton["menu"] = menubutton.menu
+# # Add some commands
+menubutton.menu.add_command(label="the network", command=lambda arg1 = "networkx": ess(arg1))
+menubutton.menu.add_command(label="the graph of the infection map", command=lambda arg1 = "Infection map": ess(arg1))
+menubutton.menu.add_command(label="the of the number of interactions barchart", command=lambda arg1 = "Number of interactions": ess(arg1))
+menubutton.menu.add_command(label="the adjacency matrix", command=lambda arg1 = "Adjacency matrix": ess(arg1))
+
+
+
+
+
+#boutonPlot_Caracteristics=Button(fenetre, text="caracteristics of the plot blabla", command= lambda arg1 = "networkx" : ess(arg1)).grid(row = 9, column = 1, sticky = W, columnspan = 1)
 
 
 
