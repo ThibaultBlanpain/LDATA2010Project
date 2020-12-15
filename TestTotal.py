@@ -34,6 +34,7 @@ from grave import plot_network
 from grave.style import use_attributes
 from matplotlib.colors import LogNorm
 from matplotlib.colors import LinearSegmentedColormap
+from matplotlib import cm
 
 # dash
 
@@ -74,13 +75,35 @@ def get_the_parameters():
 #barchart->timemin,timemax
 #adjMatr->timemin,timemax
 
-
+#variables globales
 global canvas
+wherePP = "the main window"
+btn=None
 MajorData = None
 timestepmax=0
 textvar= None 
 arg=None
 quelfig=0
+nodata=1
+opt=1
+nsp=0
+label1=None
+button1=None
+entry1=None
+button2=None
+entry2=None
+label2=None
+button3=None
+entry3=None
+label3=None
+nodescolor={}
+edgescolor={}
+edgeswidth={}
+nodebegin=None
+nodeend=None
+
+
+
 
 fontt = tkFont.Font(family='Helvetica', size=36, weight='bold')
 
@@ -88,18 +111,23 @@ fontt = tkFont.Font(family='Helvetica', size=36, weight='bold')
 def ReadFile():
     global MajorData
     global timestepmax
+    global nodata
     filename = askopenfilename(title="Ouvrir votre document",filetypes=[('csv files','.csv'),('all files','.*')])
     fichier = pd.read_csv(filename,sep=r'\s*,\s*')
     print("file opened")
     MajorData = fichier
     timestepmax=MajorData['timestep'][len(MajorData['timestep'])-1]
     showbuttons()
+    nodata=0
     return
 
 
 # ClearData fonctionnel (meme si je pense qu'on override les previous data en faisant un deuxieume ReadFile)
 def ClearData():
+    global MajorData
+    global nodata
     MajorData = None
+    nodata=1
     return
 
 
@@ -111,8 +139,7 @@ def ExitTotal():
     sys.exit()
     return None
 
-wherePP = "the main window and another window"
-btn=None
+
 
 def where(place):
     global wherePP 
@@ -146,7 +173,8 @@ def danslafen(title,fig):
         btn.destroy()
     btn = Label(fenetre, text=title)
     btn.grid(row=1, column=10, padx=20, pady=10)
-    
+    if(fig==None):
+        return;
     # specify the window as master
     canvas = FigureCanvasTkAgg(fig, master=fenetre)
     canvas.draw()
@@ -162,8 +190,8 @@ def danslafen(title,fig):
     if wherePP == "the main window and another window":
         return
     if wherePP == "another window":
-        btn3 = Label(fenetre, text=title)
-        btn3.grid(row=13, column=1, padx=20, pady=10)
+        #btn3 = Label(fenetre, text=title)
+        #btn3.grid(row=13, column=1, padx=20, pady=10)
         #for item in canvas.get_tk_widget().find_all():
         canvas.get_tk_widget().pack_forget()
         return
@@ -184,22 +212,23 @@ def danslafen(title,fig):
 #    fenetre.update()
 
 
-def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite):
-    #waitcursor()
-    #global G
+def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite,infectedonly):
+    destroyoptions()
+    global nodata
+    if(nodata==1):
+        danslafen("No data",None)
+        return;
     global arg
     global quelfig
     quelfig=1
     M=len(df['person1'])
     G=nx.Graph(name="Interaction Graph")
-    arg=G
-    carac()
     N1=df['person1'].max()
     N2=df['person2'].max()
     N=max(N1,N2)+1
     intdict={}
     for i in range(N):
-        G.add_node(i,size=50,homelong=0,homelat=0)
+        G.add_node(i,size=50,homelong=0,homelat=0,degtot=0)
     for i in range(M):
         if((df['timestep'][i]>=timestart) and (df['timestep'][i]<=timeend)):
             pers1=df['person1'][i]
@@ -215,11 +244,12 @@ def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite):
             else:
                 intdict[(pers1,pers2)]= (1,danger)
     for key,value in intdict.items():
-        if(value[0]>widthmin):
+        if(value[0]>=widthmin):
             if(value[1]==1):
                 G.add_edge(key[0],key[1],color='red',width=min((value[0]/10),5))
             else:
-                G.add_edge(key[0],key[1],color='black',width=min((value[0]/10),5))
+                if(infectedonly==0):
+                    G.add_edge(key[0],key[1],color='black',width=min((value[0]/10),5))
     for i in range(M):
         G.nodes[df['person1'][i]]['homelong']=df['home1_long'][i]
         G.nodes[df['person1'][i]]['homelat']=df['home1_lat'][i]
@@ -231,8 +261,21 @@ def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite):
     d=dict(G.degree)
     for ke in d.keys():
         G.nodes[ke]['size'] = 5+3*d[ke]
-    
-    
+    for kc in G.nodes(data=True):
+        for neigh in G.neighbors(kc[0]):
+            if (kc[0],neigh) in intdict:
+                kc[1]['degtot']=kc[1]['degtot']+intdict[(kc[0],neigh)][0]
+            else:
+                kc[1]['degtot']=kc[1]['degtot']+intdict[(neigh,kc[0])][0]
+    max_value=0
+    for km in G.nodes(data=True):
+        if(km[1]['degtot']>max_value):
+            max_value=km[1]['degtot']
+    blues = cm.get_cmap('Blues', 1000)
+    for g in G.nodes(data=True):
+        g[1]['color'] = blues(g[1]['degtot']/max_value)
+    arg=G        
+    carac()
     def spring_layout(networkx):
         pos = nx.spring_layout(G,k=k,iterations=ite)
         return pos
@@ -245,35 +288,75 @@ def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite):
     art.set_picker(10)
     fig.canvas.mpl_connect('pick_event', hilighter)
     
-    
+  
     
 def hilighter(event):
+    global nodescolor
+    global edgescolor
+    global edgeswidth
+    global textvar
     # if we did not hit a node, bail
     if not hasattr(event, 'nodes') or not event.nodes:
         return
 
-    # pull out the graph,
     graph = event.artist.graph
-
+    global opt
     # clear any non-default color on nodes
-    for node, attributes in graph.nodes.data():
-        attributes.pop('color', None)
+    #for node, attributes in graph.nodes.data():
+      #  attributes.pop('color', None)
 
     #for u, v, attributes in graph.edges.data():
       #  attributes.pop('width', None)
+    if(opt==0): 
+        for edge in edgescolor.keys():
+            graph.edges[edge]['color']=edgescolor[edge]
+            graph.edges[edge]['width']=edgeswidth[edge]
+        edgescolor={}
+        edgeswidth={}
+        for node in nodescolor.keys():
+            graph.nodes[node]['color'] = nodescolor[node]
+        nodescolor={}
+        for node in event.nodes:
+            nodescolor[node]=graph.nodes[node]['color']
+            graph.nodes[node]['color'] = 'red'
 
-    for node in event.nodes:
-        graph.nodes[node]['color'] = 'C1'
-
-    #for edge_attribute in graph[node].values():
-      #   edge_attribute['width'] = 3
          
-    for node in event.nodes:
-        global textvar
-        if(textvar!=None):
-            textvar.remove()
-        textvar=plt.text(0.7,1,'Home localisation \nid=%d \nlong=%f \nlat=%f' %(node,graph.nodes[node]['homelong'],graph.nodes[node]['homelat']),bbox={'facecolor': 'red', 'alpha': 0.5, 'pad': 10})
-        
+        for node in event.nodes:
+          if(textvar!=None):
+              textvar.remove()
+          textvar=plt.text(0.7,0.7,'Home localisation \nid=%d \nlong=%f \nlat=%f' %(node,graph.nodes[node]['homelong'],graph.nodes[node]['homelat']),bbox={'facecolor': 'red', 'alpha': 0.5, 'pad': 10})
+    global nsp
+    global nodebegin
+    global nodeend
+    if(opt==1):  
+        if(nsp==0):
+            for edge in edgescolor.keys():
+                graph.edges[edge]['color']=edgescolor[edge]
+                graph.edges[edge]['width']=edgeswidth[edge]
+            edgescolor={}
+            edgeswidth={}
+            for node in nodescolor.keys():
+                graph.nodes[node]['color'] = nodescolor[node]
+            nodescolor={}
+            node=event.nodes[0]
+            #nodescolor[node]=graph.nodes[node]['color']
+            nodebegin=node
+            #graph.nodes[node]['color'] = 'red'
+            if(textvar!=None):
+                textvar.remove()
+            nsp=1
+            textvar=plt.text(0.7,0.7,'select another node')
+            
+        else:
+            node=event.nodes[0]
+            nodeend=node
+            shortestPath(graph,nodebegin,nodeend)
+            if(textvar!=None):
+                textvar.remove()
+            nsp=0
+            textvar=plt.text(0.7,0.7,'select a node')
+            
+            
     # update the screen
     event.artist.stale = True
     event.artist.figure.canvas.draw_idle()
@@ -281,6 +364,11 @@ def hilighter(event):
 
 
 def Map(df,title,timestart,timeend,nbrmin,sizeref):
+    destroyoptions()
+    global nodata
+    if(nodata==1):
+        danslafen("No data",None)
+        return;
     M=len(df['person1'])
     start=0
     end=M
@@ -320,6 +408,14 @@ def Map(df,title,timestart,timeend,nbrmin,sizeref):
     danslafen(title,fig)
 
 def BarChart(df,title,timemin,timemax):
+    destroyoptions()
+    global nodata
+    if(nodata==1):
+        danslafen("No data",None)
+        return;
+    global quelfig
+    quelfig=3
+    global arg
     M=len(df['person1'])
     N1=df['person1'].max()
     N2=df['person2'].max()
@@ -329,6 +425,8 @@ def BarChart(df,title,timemin,timemax):
         if((df['timestep'][i]>=timemin) and (df['timestep'][i]<=timemax)):
             nbinter[df['person1'][i]]=nbinter[df['person1'][i]]+1
             nbinter[df['person2'][i]]=nbinter[df['person2'][i]]+1
+    arg=nbinter
+    carac()
     index= sorted(range(N), key=lambda k: nbinter[k],reverse=True)
     nbinter=sorted(nbinter,reverse=True)
 
@@ -340,9 +438,15 @@ def BarChart(df,title,timemin,timemax):
         if(nbinter[i]!=0):
             plt.bar(str(index[i]),nbinter[i], align='center',color='blue')   
 
+    
     danslafen(title,fig)
 
 def AdjacencyMatrix(df,title,timemin,timemax):
+    destroyoptions()
+    global nodata
+    if(nodata==1):
+        danslafen("No data",None)
+        return;
     global quelfig
     quelfig=4
     global arg
@@ -366,13 +470,20 @@ def AdjacencyMatrix(df,title,timemin,timemax):
         cmap="viridis_r",
         linewidths=0.0,
         mask=(data==0),
-        figsize=(5,5)
+        figsize=(5,5),
+        xticklabels=True,
+        yticklabels=True
         )
     az.fig.suptitle('Adjacency matrix') 
     
     danslafen(title,az.fig)
 
 def Interplot(df,title):
+    destroyoptions()
+    global nodata
+    if(nodata==1):
+        danslafen("No data",None)
+        return;
     global quelfig
     quelfig=5
     global arg
@@ -420,31 +531,130 @@ def Interplot(df,title):
     
 def caract(arg):
     global quelfig
+    global label1
+    global button1
+    global entry1
+    if(label1!=None):
+        label1.destroy()
+    if(button1!=None):
+        button1.destroy()
+    if(entry1!=None):
+        entry1.destroy()
     if(quelfig==1):
-        btn3 = Label(fenetre, text=nx.info(arg))
-        btn3.grid(row=15, column=1, padx=20, pady=10)
+        label1 = tk.Label(fenetre, text=nx.info(arg))
+        label1.grid(row=12, column=1, padx=20, pady=10)
+        moreoptions(arg)
     if(quelfig==5):
-        entry=tk.Entry(fenetre)
-        entry.grid(row=15,column=1,padx=20,pady=10)
+        entry1=tk.Entry(fenetre)
+        entry1.grid(row=12,column=1,padx=20,pady=10)
         def getInter():
-            x=int(entry.get())
+            global label1
+            if(label1!=None):
+                label1.destroy()
+            x=int(entry1.get())
             label1 = tk.Label(fenetre, text=arg[x])
-            label1.grid(row=16,column=1,padx=20,pady=10)
+            label1.grid(row=13,column=1,padx=20,pady=10)
         button1 = tk.Button(text='Get number of risky interactions', command=getInter)
-        button1.grid(row=17,column=1,padx=20,pady=10)
+        button1.grid(row=14,column=1,padx=20,pady=10)
     if(quelfig==4):
-        f1 = tk.Frame(fenetre)
-        entry1=tk.Entry(f1)
-        entry2=tk.Entry(f1)
-        f1.grid(row=15,column=1,padx=20,pady=10)
-        def getInterx1x2():
-            
-            x1=int(entry1.get())
-            x2=int(entry2.get())
+        entry1=tk.Entry(fenetre)
+        entry1.grid(row=12,column=1,padx=20,pady=10)
+        def getInterx1x2(): 
+            global label1
+            if(label1!=None):
+                label1.destroy()
+            x=entry1.get().split(",")
+            x1=int(x[0])
+            x2=int(x[1])
             label1 = tk.Label(fenetre, text=arg[x1][x2])
-            label1.grid(row=16,column=1,padx=20,pady=10)
-        button1 = tk.Button(text='Get number of interactions between id1 and id2', command=getInterx1x2)
-        button1.grid(row=17,column=1,padx=20,pady=10)
+            label1.grid(row=13,column=1,padx=20,pady=10)
+        button1 = tk.Button(text="Format x1,x2", command=getInterx1x2)
+        button1.grid(row=14,column=1,padx=20,pady=10)
+    if(quelfig==3):
+        entry1=tk.Entry(fenetre)
+        entry1.grid(row=12,column=1,padx=20,pady=10)
+        def getInterid():
+            global label1
+            if(label1!=None):
+                label1.destroy()
+            x=int(entry1.get())
+            label1 = tk.Label(fenetre, text=arg[x])
+            label1.grid(row=13,column=1,padx=20,pady=10)
+        button1 = tk.Button(text='Get number interactions for id', command=getInterid)
+        button1.grid(row=14,column=1,padx=20,pady=10)
+
+def shortestPath(G,node1,node2):
+    global nodescolor
+    global edgescolor
+    global edgeswidth
+    path = nx.shortest_path(G,source=node1,target=node2)
+    path_edges = zip(path,path[1:])
+    for node in path:
+        nodescolor[node]=G.nodes[node]['color']
+        G.nodes[node]['color'] = 'yellow'
+    for edge in path_edges:
+        edgescolor[edge]=G.edges[edge]['color']
+        edgeswidth[edge]=G.edges[edge]['width']
+        G.edges[edge]['color']='yellow'
+        G.edges[edge]['width']=5
+
+def moreoptions(G):
+    global button2
+    global entry2
+    global label2
+    entry2=tk.Entry(fenetre)
+    entry2.grid(row=1,column=4,padx=20,pady=10)
+    def betwcen():
+        global label2
+        x=int(entry2.get())
+        betw=nx.betweenness_centrality(G)
+        if(label2!=None):
+            label2.destroy()
+        label2 = tk.Label(fenetre, text=betw[x])
+        label2.grid(row=2,column=4,padx=20,pady=10)
+    button2 = tk.Button(text='Betweenness centrality of n', command=betwcen)
+    button2.grid(row=3,column=4,padx=20,pady=10)
+    global button3
+    global entry3
+    global label3
+    entry3=tk.Entry(fenetre)
+    entry3.grid(row=4,column=4,padx=20,pady=10)
+    def clustercoef():
+        global label3
+        x=int(entry3.get())
+        clus=nx.clustering(G,x)
+        if(label3!=None):
+            label3.destroy()
+        label3 = tk.Label(fenetre, text=clus)
+        label3.grid(row=5,column=4,padx=20,pady=10)
+    button3 = tk.Button(text='Clustering ceofficient n', command=clustercoef)
+    button3.grid(row=6,column=4,padx=20,pady=10)
+
+def destroyoptions():
+    global button1
+    global entry1
+    global label1
+    global button2
+    global entry2
+    global label2
+    global button3
+    global entry3
+    global label3
+    if(label1!=None):
+        label1.destroy()
+    if(button1!=None):
+        button1.destroy()
+    if(entry1!=None):
+        entry1.destroy()
+    if(button2!=None):
+        button2.destroy()
+        entry2.destroy()
+        if(label2!=None):
+            label2.destroy()
+        button3.destroy()
+        entry3.destroy()
+        if(label3!=None):
+            label3.destroy()
 
 Separator(fenetre, orient=VERTICAL).grid(column=2, row=0, rowspan=40, sticky='ns')
 ttk.Sizegrip()
@@ -455,11 +665,11 @@ buttonRead.grid(row = 2, column = 1, sticky = W, columnspan = 1)
 
 buttonClear = Button(fenetre, text="Clear Imported Data", command=ClearData).grid(row = 3, column = 1, sticky = W, columnspan = 1)
 def showbuttons():
-    boutonNextworkx=Button(fenetre, text="Graph", command=lambda df=MajorData, title = "Graph", degmin=1,widthmin=1,timemin=0,timemax=timestepmax,k=0.05,iterations=50 : Networkx(df,title,degmin,widthmin,timemin,timemax,k,iterations)).grid(row = 4, column = 1, sticky = W, columnspan = 1)
+    boutonNextworkx=Button(fenetre, text="Graph (new window only)", command=lambda df=MajorData, title = "Graph", degmin=1,widthmin=1,timemin=0,timemax=timestepmax,k=0.1,iterations=50, infeconly=0 : Networkx(df,title,degmin,widthmin,timemin,timemax,k,iterations,infeconly)).grid(row = 4, column = 1, sticky = W, columnspan = 1)
 
     #boutonForce_Layout=Button(fenetre, text="Force-Layout", command=lambda arg1 = "the main window", arg2 = "Force-Layout" : ploterT(arg1, arg2)).grid(row = 5, column = 1, sticky = W, columnspan = 1)
 
-    boutonInfection_Map=Button(fenetre, text="Interaction map", command=lambda df = MajorData, title = "Intercation Map" , timemin=0, timemax=50, nbremin=1, sizeref=10000: Map(df,title,timemin,timemax,nbremin,sizeref)).grid(row = 6, column = 1, sticky = W, columnspan = 1)
+    boutonInfection_Map=Button(fenetre, text="Interaction map", command=lambda df = MajorData, title = "Map of interactions" , timemin=0, timemax=50, nbremin=1, sizeref=10000: Map(df,title,timemin,timemax,nbremin,sizeref)).grid(row = 6, column = 1, sticky = W, columnspan = 1)
 
     boutonInteraction_people=Button(fenetre, text="Interaction/person", command=lambda df = MajorData, title = "Intercation/person" , timemin=0, timemax=timestepmax: BarChart(df,title,timemin,timemax)).grid(row = 5, column = 1, sticky = W, columnspan = 1)
 
