@@ -10,7 +10,7 @@ import networkx as nx
 import numpy as np 
 import pandas as pd
 from matplotlib.backends.backend_tkagg import (FigureCanvasTkAgg, NavigationToolbar2Tk)
-
+import seaborn as sns 
 
 import tkinter as tk 
 from tkinter import ttk
@@ -26,8 +26,10 @@ import sys
 
 fenetre = tk.Tk()
 fenetre.title("Information Visualisation")
-
-
+#networkx->degmin,widthmin,timestart,timeend,k,ite + bouton homeloc/shortest path
+#map->timestart,timeend,nbrmin,sizeref
+#barchart->timemin,timemax
+#adjMatr->timemin,timemax
 
 MAX_DISPLACEMENT_SQUARED = 10000
 L = 50 #spring rest length
@@ -89,6 +91,30 @@ def where(place):
         plt.close("all")
     return
 
+def AdjacencyMatrix(df,title,timemin,timemax):
+    M=len(df['person1'])
+    N1=df['person1'].max()
+    N2=df['person2'].max()
+    N=max(N1,N2)+1
+    data=np.zeros((N,N))
+    for i in range(M):
+        if((df['timestep'][i]>=timemin)and(df['timestep'][i]<=timemax)):
+            p1=df['person1'][i]
+            p2=df['person2'][i]
+            data[p1][p2]=(data[p1][p2])+1
+            data[p2][p1]=(data[p2][p1])+1
+    
+    az=sns.clustermap(
+        vmin=0.0,
+        vmax=data.max(),
+        data=data,
+        cmap="viridis_r",
+        linewidths=0.0,
+        mask=(data==0),
+  )
+    az.fig.suptitle('Adjacency matrix') 
+    
+    danslafen(title,az.fig)
 
 #test plot
 whereplot = "zero"
@@ -99,7 +125,8 @@ def ploterT(whereplot, title):
     x = ['Col A', 'Col B', 'Col C']
     y = [50, 20, 80]
     if title == "po":
-        y = [0, 0, 300]
+        x = ['Col A', 'Col B', 'Col C', 'col D']
+        y = [0, 0, 300, 80]
     fig = plt.figure(figsize=(3, 3))
     plt.bar(x=x, height=y)
     
@@ -131,6 +158,71 @@ def ploterT(whereplot, title):
         btn2.grid(row=13, column=1, padx=20, pady=10)
         plt.close("all")
         return
+
+def verify(u):
+    b = u.get()
+    print(b)
+    print(int(b) == answer)  # calling get() here!
+answer = 3
+
+#networkx->degmin,widthmin,timestart,timeend,k,ite + bouton homeloc/shortest path
+#map->timestart,timeend,nbrmin,sizeref
+#barchart->timemin,timemax
+#adjMatr->timemin,timemax
+
+def valid(arg1, arg2, arg3, arg4, arg5, arg6):
+    global degmin,widthmin,timestart,timeend,k,ite
+    
+    degmin = int(arg1.get())
+    widthmin = int(arg2.get())
+    timestart = int(arg3.get())
+    timeend = int(arg4.get())
+    k = int(arg5.get())
+    ite = int(arg6.get())
+    print(degmin,widthmin,timestart,timeend,k,ite)
+    
+
+def ess(func):
+    
+    if(func == "networkx"):
+        user_inputdeg = tk.StringVar(fenetre)
+        user_inputwid = tk.StringVar(fenetre)
+        user_inputtimS = tk.StringVar(fenetre)
+        user_inputtimE = tk.StringVar(fenetre)
+        user_inputk = tk.StringVar(fenetre)
+        user_inputite = tk.StringVar(fenetre)
+        
+        # entry1 = tk.Entry(fenetre, textvariable=user_input1).grid(row = 12, column = 1)
+        # check = tk.Button(fenetre, text='check 3', command=lambda arg1   = user_input1 : verify(arg1))
+        # check.grid(row = 13, column = 1)
+        
+        
+        
+        degmin = tk.Entry(fenetre, textvariable=user_inputdeg).grid(row = 13, column = 1)
+        widthmin = tk.Entry(fenetre,textvariable=user_inputwid).grid(row = 14, column = 1)
+        timestart = tk.Entry(fenetre, textvariable=user_inputtimS).grid(row = 15, column = 1)
+        timeend = tk.Entry(fenetre, textvariable=user_inputtimE).grid(row = 16, column = 1)
+        k = tk.Entry(fenetre,textvariable=user_inputk).grid(row = 17, column = 1)
+        ite = tk.Entry(fenetre,textvariable=user_inputite).grid(row = 18, column = 1)
+        
+        
+        val = Button(fenetre, text='new values for the network graph', command=lambda arg1 = user_inputdeg, arg2 = user_inputwid, arg3 = user_inputtimS, arg4 = user_inputtimE, arg5 = user_inputk, arg6 = user_inputite : valid(arg1,arg2, arg3, arg4, arg5, arg6))
+        val.grid(row = 19, column = 1)
+        
+        
+    if(func == "Infection map"):
+        print("1")
+    
+    if(func == "barchart"): #(modify color)
+        print("2")
+    
+    if(func == "adjMatr"):
+        print("3")
+    
+    # user_input1 = tk.StringVar(fenetre)
+    # entry1 = tk.Entry(fenetre, textvariable=user_input1).grid(row = 12, column = 1)
+    # check = tk.Button(fenetre, text='check 3', command=lambda arg1   = user_input1 : verify(arg1))
+    # check.grid(row = 13, column = 1)
 
 #(rgb, hx) = colorchooser.askcolor()
 #print(rgb, hx)
@@ -165,7 +257,7 @@ buttonRead.grid(row = 2, column = 1, sticky = W, columnspan = 1)
 
 buttonClear = Button(fenetre, text="Clear Imported Data", command=ClearData).grid(row = 3, column = 1, sticky = W, columnspan = 1)
 
-boutonNextworkx=Button(fenetre, text="Networkx", command=lambda arg1 = "the main window", arg2 = "Networkx" : ploterT(arg1, arg2)).grid(row = 4, column = 1, sticky = W, columnspan = 1)
+boutonNextworkx=Button(fenetre, text="Networkx", command=lambda arg1 = "the main window", arg2 = "po" : ploterT(arg1, arg2)).grid(row = 4, column = 1, sticky = W, columnspan = 1)
 
 boutonForce_Layout=Button(fenetre, text="Force-Layout", command=lambda arg1 = "the main window", arg2 = "Force-Layout" : ploterT(arg1, arg2)).grid(row = 5, column = 1, sticky = W, columnspan = 1)
 
@@ -175,7 +267,7 @@ boutonAdjacency_Matrix=Button(fenetre, text="Adjacency matrix", command=lambda a
 
 boutonIntercation_Number=Button(fenetre, text="Number of interactions", command=lambda arg1 = "the main window", arg2 = "Number of interaction" : ploterT(arg1, arg2)).grid(row = 8, column = 1, sticky = W, columnspan = 1)
 
-boutonPlot_Caracteristics=Button(fenetre, text="caracteristics of the plot blabla", command=lambda arg1 = "the main window", arg2 = "Caracteristics of the plot" : ploterT(arg1, arg2)).grid(row = 9, column = 1, sticky = W, columnspan = 1)
+boutonPlot_Caracteristics=Button(fenetre, text="caracteristics of the plot blabla", command= lambda arg1 = "networkx" : ess(arg1)).grid(row = 9, column = 1, sticky = W, columnspan = 1)
 
 
 
