@@ -543,12 +543,13 @@ def Interplot(df,title):
 # menubutton.menu.add_command(label="Exit")
 # menubutton.grid(row=0, column=0)
     
-def caract(arg):
+def caract(new):
+    global arg
     global quelfig
     global label1
     global button1
     global entry1
-    ess(quelfig)
+    ess(quelfig,new)
     if(label1!=None):
         label1.destroy()
     if(button1!=None):
@@ -705,6 +706,7 @@ def Validate(func,argList):
         nbrmin=argList[2].get()
         sizeref=argList[3].get()
         Map(MajorData,"Map",timestart,timeend,nbrmin,sizeref,0)
+        
     
     if(func==3):
         timestart=argList[0].get()
@@ -718,18 +720,20 @@ def Validate(func,argList):
         timeend=argList[1].get()
         AdjacencyMatrix(MajorData,"AdjacencyMatrix",timestart,timeend,0)
         
+    caract(0)
 
 
       
-def ess(func):
+def ess(func,new):
     global listtodel
     global MajorData
-    
+    if(new==0):
+        return
     if(func == 1):
         
         user_inputdeg = tk.IntVar(fenetre)
         user_inputwid = tk.IntVar(fenetre)
-        user_inputtimS = tk.IntVar(fenetre)
+        user_inputtimS = tk.IntVar(fenetre) 
         user_inputtimE = tk.IntVar(fenetre)
         user_inputk = tk.DoubleVar(fenetre)
         user_inputite = tk.IntVar(fenetre)
@@ -831,7 +835,7 @@ def ess(func):
         val = Button(fenetre, text='validate', command=lambda arg1=func, arg2=[user_inputtimMi,user_inputtimMa,user_inputOrange,user_inputRed] : Validate(arg1,arg2))
         val.grid(row = 17, column = 1)
         
-        listtodel.extend([TS,TE,timestart,timeend,val])
+        listtodel.extend([TS,TE,timestart,timeend,val,CO,CR,limred,limorange])
     
     if(func == 4):
         user_inputtimMi = tk.IntVar(fenetre)
@@ -873,7 +877,7 @@ def showbuttons():
 
     boutonIntercation_Number=Button(fenetre, text="Number of risky interactions", command=lambda df=MajorData, title = "Number of risky interactions" : Interplot(df, title)).grid(row = 8, column = 1, sticky = W, columnspan = 1)
 def carac():
-    boutonPlot_Caracteristics=Button(fenetre, text="Caracteristics of the plot ", command=lambda arg1 = arg : caract(arg1)).grid(row = 9, column = 1, sticky = W, columnspan = 1)
+    boutonPlot_Caracteristics=Button(fenetre, text="Caracteristics of the plot ", command=lambda arg1=1: caract(arg1)).grid(row = 9, column = 1, sticky = W, columnspan = 1)
 
 
 
