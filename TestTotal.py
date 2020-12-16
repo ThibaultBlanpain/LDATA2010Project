@@ -32,6 +32,7 @@ from matplotlib import cm
 
 def bye(event):
     #fenetre.attributes("-fullscreen", False)
+    plt.close('all')
     fenetre.destroy()
     sys.exit()
 fenetre = tk.Tk()
@@ -40,14 +41,14 @@ fenetre.attributes("-fullscreen", True)
 fenetre.bind("<Escape>", bye)
 
 
-
+"""
 MAX_DISPLACEMENT_SQUARED = 10000
 L = 50 #spring rest length
 K_r = 2000 #repulsive force constant
 K_s = 1  #spring constant
 delta_t = 0.004 # time step
 
-"""
+
 L = tk.StringVar(fenetre)
 MAX_DISPLACEMENT_SQUARED = tk.StringVar(fenetre)
 K_r = tk.StringVar(fenetre)
@@ -68,7 +69,8 @@ def get_the_parameters():
 #adjMatr->timemin,timemax
 
 #variables globales
-global canvas
+canvas=None
+toolbarFrame=None
 wherePP = "the main window"
 btn=None
 MajorData = None
@@ -94,6 +96,7 @@ edgescolor={}
 edgeswidth={}
 nodebegin=None
 nodeend=None
+listtodel=[]
 
 
 
@@ -162,6 +165,8 @@ def danslafen(title,fig):
     
     global wherePP
     global btn
+    global canvas
+    global toolbarFrame
     if(btn!=None):
         btn.destroy()
     btn = Label(fenetre, text=title)
@@ -205,8 +210,8 @@ def danslafen(title,fig):
 #    fenetre.update()
 
 
-def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite,infectedonly):
-    destroyoptions()
+def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite,infectedonly,newplot):
+    destroyoptions(newplot)
     global nodata
     if(nodata==1):
         danslafen("No data",None)
@@ -273,8 +278,8 @@ def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite,infectedonly):
     def changeopt():
         global opt
         opt=1-opt
-    buttonopt = tk.Button(text="Change opt", command=changeopt)
-    buttonopt.grid(row=7,column=4,padx=20,pady=10)
+    buttonopt = tk.Button(text="Shortestpath/Home Localisation", command=changeopt)
+    buttonopt.grid(row=8,column=4,padx=20,pady=10)
     
     def spring_layout(networkx):
         pos = nx.spring_layout(G,k=k,iterations=ite)
@@ -363,12 +368,14 @@ def hilighter(event):
 
 
 
-def Map(df,title,timestart,timeend,nbrmin,sizeref):
-    destroyoptions()
+def Map(df,title,timestart,timeend,nbrmin,sizeref,newplot):
+    destroyoptions(newplot)
     global nodata
     if(nodata==1):
         danslafen("No data",None)
         return;
+    global quelfig
+    quelfig=2
     M=len(df['person1'])
     start=0
     end=M
@@ -399,7 +406,7 @@ def Map(df,title,timestart,timeend,nbrmin,sizeref):
     for key,value in locdict.items():
         if(value>=nbrmin) :    
             plt.scatter(key[0], key[1], zorder=1, alpha= 1, c='black', s=value*sizeref/ntot)  
-  
+    carac()
     plt.title('Interaction map')
     plt.xlim(BBox[0],BBox[1])
     plt.ylim(BBox[2],BBox[3])
@@ -407,8 +414,9 @@ def Map(df,title,timestart,timeend,nbrmin,sizeref):
     
     danslafen(title,fig)
 
-def BarChart(df,title,timemin,timemax):
-    destroyoptions()
+def BarChart(df,title,timemin,timemax,orange,red,newplot):
+    print(timemax)
+    destroyoptions(newplot)
     global nodata
     if(nodata==1):
         danslafen("No data",None)
@@ -436,13 +444,19 @@ def BarChart(df,title,timemin,timemax):
     plt.ylabel("Intercations")
     for i in range(N):
         if(nbinter[i]!=0):
-            plt.bar(str(index[i]),nbinter[i], align='center',color='blue')   
+            if(nbinter[i]<orange):
+                plt.bar(str(index[i]),nbinter[i], align='center',color='green') 
+            elif(nbinter[i]>red):
+                plt.bar(str(index[i]),nbinter[i], align='center',color='red')
+            else:
+                plt.bar(str(index[i]),nbinter[i], align='center',color='orange')
+                
 
     
     danslafen(title,fig)
 
-def AdjacencyMatrix(df,title,timemin,timemax):
-    destroyoptions()
+def AdjacencyMatrix(df,title,timemin,timemax,newplot):
+    destroyoptions(newplot)
     global nodata
     if(nodata==1):
         danslafen("No data",None)
@@ -479,7 +493,7 @@ def AdjacencyMatrix(df,title,timemin,timemax):
     danslafen(title,az.fig)
 
 def Interplot(df,title):
-    destroyoptions()
+    destroyoptions(1)
     global nodata
     if(nodata==1):
         danslafen("No data",None)
@@ -534,6 +548,7 @@ def caract(arg):
     global label1
     global button1
     global entry1
+    ess(quelfig)
     if(label1!=None):
         label1.destroy()
     if(button1!=None):
@@ -542,23 +557,23 @@ def caract(arg):
         entry1.destroy()
     if(quelfig==1):
         label1 = tk.Label(fenetre, text=nx.info(arg))
-        label1.grid(row=12, column=1, padx=20, pady=10)
+        label1.grid(row=12, column=4, padx=20, pady=10)
         moreoptions(arg)
     if(quelfig==5):
         entry1=tk.Entry(fenetre)
-        entry1.grid(row=12,column=1,padx=20,pady=10)
+        entry1.grid(row=12,column=4,padx=20,pady=10)
         def getInter():
             global label1
             if(label1!=None):
                 label1.destroy()
             x=int(entry1.get())
             label1 = tk.Label(fenetre, text=arg[x])
-            label1.grid(row=13,column=1,padx=20,pady=10)
+            label1.grid(row=13,column=4,padx=20,pady=10)
         button1 = tk.Button(text='Get number of risky interactions', command=getInter)
-        button1.grid(row=14,column=1,padx=20,pady=10)
+        button1.grid(row=14,column=4,padx=20,pady=10)
     if(quelfig==4):
         entry1=tk.Entry(fenetre)
-        entry1.grid(row=12,column=1,padx=20,pady=10)
+        entry1.grid(row=12,column=4,padx=20,pady=10)
         def getInterx1x2(): 
             global label1
             if(label1!=None):
@@ -567,21 +582,22 @@ def caract(arg):
             x1=int(x[0])
             x2=int(x[1])
             label1 = tk.Label(fenetre, text=arg[x1][x2])
-            label1.grid(row=13,column=1,padx=20,pady=10)
+            label1.grid(row=13,column=4,padx=20,pady=10)
         button1 = tk.Button(text="Format x1,x2", command=getInterx1x2)
-        button1.grid(row=14,column=1,padx=20,pady=10)
+        button1.grid(row=14,column=4,padx=20,pady=10)
     if(quelfig==3):
         entry1=tk.Entry(fenetre)
-        entry1.grid(row=12,column=1,padx=20,pady=10)
+        entry1.grid(row=12,column=4,padx=20,pady=10)
         def getInterid():
             global label1
             if(label1!=None):
                 label1.destroy()
             x=int(entry1.get())
             label1 = tk.Label(fenetre, text=arg[x])
-            label1.grid(row=13,column=1,padx=20,pady=10)
+            label1.grid(row=13,column=4,padx=20,pady=10)
         button1 = tk.Button(text='Get number interactions for id', command=getInterid)
-        button1.grid(row=14,column=1,padx=20,pady=10)
+        button1.grid(row=14,column=4,padx=20,pady=10)
+   
 
 def shortestPath(G,node1,node2):
     global nodescolor
@@ -603,7 +619,7 @@ def moreoptions(G):
     global entry2
     global label2
     entry2=tk.Entry(fenetre)
-    entry2.grid(row=1,column=4,padx=20,pady=10)
+    entry2.grid(row=1,column=4,padx=20,pady=10,sticky=NW)
     def betwcen():
         global label2
         x=int(entry2.get())
@@ -611,14 +627,14 @@ def moreoptions(G):
         if(label2!=None):
             label2.destroy()
         label2 = tk.Label(fenetre, text=betw[x])
-        label2.grid(row=2,column=4,padx=20,pady=10)
+        label2.grid(row=1,column=4,padx=20,pady=10,sticky=NE)
     button2 = tk.Button(text='Betweenness centrality of n', command=betwcen)
-    button2.grid(row=3,column=4,padx=20,pady=10)
+    button2.grid(row=2,column=4,padx=20,pady=10,sticky=NW)
     global button3
     global entry3
     global label3
     entry3=tk.Entry(fenetre)
-    entry3.grid(row=4,column=4,padx=20,pady=10)
+    entry3.grid(row=4,column=4,padx=20,pady=10,sticky=NW)
     def clustercoef():
         global label3
         x=int(entry3.get())
@@ -626,11 +642,13 @@ def moreoptions(G):
         if(label3!=None):
             label3.destroy()
         label3 = tk.Label(fenetre, text=clus)
-        label3.grid(row=5,column=4,padx=20,pady=10)
-    button3 = tk.Button(text='Clustering ceofficient n', command=clustercoef)
-    button3.grid(row=6,column=4,padx=20,pady=10)
+        label3.grid(row=4,column=4,padx=20,pady=10,sticky=NE)
+    button3 = tk.Button(text='Clustering coefficient n', command=clustercoef)
+    button3.grid(row=5,column=4,padx=20,pady=10,sticky=NW)
 
-def destroyoptions():
+def destroyoptions(newplot):
+    global canvas
+    global toolbarFrame
     global button1
     global entry1
     global label1
@@ -640,6 +658,10 @@ def destroyoptions():
     global button3
     global entry3
     global label3
+    if(canvas!=None):
+        canvas.get_tk_widget().destroy()
+    if(toolbarFrame!=None):
+        toolbarFrame.destroy()
     if(label1!=None):
         label1.destroy()
     if(button1!=None):
@@ -658,7 +680,178 @@ def destroyoptions():
     global buttonopt
     if(buttonopt!=None):
         buttonopt.destroy()
+    if(newplot==1):
+        global listtodel
+        while (listtodel!=[]):
+            if(listtodel[0]!=None):
+                listtodel[0].destroy()
+            listtodel.pop(0)
+  
+def Validate(func,argList):
+    global MajorData
+    if(func==1):
+        degmin=argList[0].get()
+        widthmin=argList[1].get()
+        starttime=argList[2].get()
+        endtime=argList[3].get()
+        paramk=argList[4].get()
+        itera=argList[5].get()
+        infec=argList[6].get()
+        Networkx(MajorData,"Graph",degmin,widthmin,starttime,endtime,paramk,itera,infec,0)
+      
+    if(func==2):
+        timestart=argList[0].get()
+        timeend=argList[1].get()
+        nbrmin=argList[2].get()
+        sizeref=argList[3].get()
+        Map(MajorData,"Map",timestart,timeend,nbrmin,sizeref,0)
+    
+    if(func==3):
+        timestart=argList[0].get()
+        timeend=argList[1].get()
+        orange=argList[2].get()
+        red=argList[3].get()
+        BarChart(MajorData,"Interactions/id",timestart,timeend,orange,red,0)
+        
+    if(func==4):
+        timestart=argList[0].get()
+        timeend=argList[1].get()
+        AdjacencyMatrix(MajorData,"AdjacencyMatrix",timestart,timeend,0)
+        
 
+
+      
+def ess(func):
+    global listtodel
+    global MajorData
+    
+    if(func == 1):
+        
+        user_inputdeg = tk.IntVar(fenetre)
+        user_inputwid = tk.IntVar(fenetre)
+        user_inputtimS = tk.IntVar(fenetre)
+        user_inputtimE = tk.IntVar(fenetre)
+        user_inputk = tk.DoubleVar(fenetre)
+        user_inputite = tk.IntVar(fenetre)
+        user_inputinf=tk.IntVar(fenetre)
+        
+        # entry1 = tk.Entry(fenetre, textvariable=user_input1).grid(row = 12, column = 1)
+        # check = tk.Button(fenetre, text='check 3', command=lambda arg1   = user_input1 : verify(arg1))
+        # check.grid(row = 13, column = 1)
+        
+        DeMin = Label(fenetre, text = "Minimal degree")
+        DeMin.grid(row=13,column=1,sticky=W)
+        Lam = Label(fenetre, text = "Minimal width")
+        Lam.grid(row=14,column=1,sticky=W)
+        TS = Label(fenetre, text = "Starting time")
+        TS.grid(row=15,column=1,sticky=W)
+        TE = Label(fenetre, text = "Ending time")
+        TE.grid(row=16,column=1,sticky=W)
+        kK = Label(fenetre, text = "K value")
+        kK.grid(row=17,column=1,sticky=W)
+        ITE = Label(fenetre, text = "Number of iter")
+        ITE.grid(row=18,column=1,sticky=W)
+        INF=Label(fenetre,text="Risky only?(0/1)")
+        INF.grid(row=19,column=1,sticky=W)
+        
+        degmin = tk.Entry(fenetre, textvariable=user_inputdeg, width=8)
+        degmin.grid(row = 13, column = 1, sticky=E)
+        widthmin = tk.Entry(fenetre,textvariable=user_inputwid, width=8)
+        widthmin.grid(row = 14, column = 1, sticky=E)
+        timestart = tk.Entry(fenetre, textvariable=user_inputtimS, width=8)
+        timestart.grid(row = 15, column = 1, sticky=E)
+        timeend = tk.Entry(fenetre, textvariable=user_inputtimE, width=8)
+        timeend.grid(row = 16, column = 1, sticky=E)
+        k = tk.Entry(fenetre,textvariable=user_inputk, width=8)
+        k.grid(row = 17, column = 1, sticky=E)
+        ite = tk.Entry(fenetre,textvariable=user_inputite, width=8)
+        ite.grid(row = 18, column = 1, sticky=E)
+        inf = tk.Entry(fenetre,textvariable=user_inputinf,width=8)
+        inf.grid(row=19,column=1,sticky=E)
+        
+        
+        val = Button(fenetre, text='validate', command=lambda  arg1 = func , arg2=[user_inputdeg,user_inputwid,user_inputtimS,user_inputtimE, user_inputk,user_inputite,user_inputinf]: Validate(arg1,arg2))
+        val.grid(row = 20, column = 1)
+        
+        listtodel.extend([DeMin,Lam,TS,TE,kK,ITE,degmin,widthmin,timestart,timeend,k,ite,val,INF,inf])
+        
+    if(func == 2):
+        user_inputtimS = tk.IntVar(fenetre)
+        user_inputtimE = tk.IntVar(fenetre)
+        user_inputtimNbrm = tk.IntVar(fenetre)
+        user_inputtimSizer = tk.IntVar(fenetre)
+        
+        TS = Label(fenetre, text = "Starting time")
+        TS.grid(row=13,column=1,sticky=W)
+        TE = Label(fenetre, text = "Ending time")
+        TE.grid(row=14,column=1,sticky=W)
+        NM = Label(fenetre, text = "Minimal number")
+        NM.grid(row=15,column=1,sticky=W)
+        SR = Label(fenetre, text = "Size of reference")
+        SR.grid(row=16,column=1,sticky=W)
+        
+        timestart = tk.Entry(fenetre, textvariable=user_inputtimS, width=8)
+        timestart.grid(row = 13, column = 1, sticky=E)
+        timeend = tk.Entry(fenetre,textvariable=user_inputtimE, width=8)
+        timeend.grid(row = 14, column = 1, sticky=E)
+        nbrmin = tk.Entry(fenetre, textvariable=user_inputtimNbrm, width=8)
+        nbrmin.grid(row = 15, column = 1, sticky=E)
+        sizeref = tk.Entry(fenetre, textvariable=user_inputtimSizer, width=8)
+        sizeref.grid(row = 16, column = 1, sticky=E)
+        
+        val = Button(fenetre, text='validate', command=lambda arg1 = func, arg2=[user_inputtimS,user_inputtimE,user_inputtimNbrm,user_inputtimSizer] : Validate(arg1,arg2))
+        val.grid(row = 17, column = 1)
+        
+        listtodel.extend([TS,TE,NM,SR,timestart,timeend,nbrmin,sizeref,val])
+    
+    if(func == 3): #(modify color)
+        user_inputtimMi = tk.IntVar(fenetre)
+        user_inputtimMa = tk.IntVar(fenetre)
+        user_inputOrange = tk.IntVar(fenetre)
+        user_inputRed = tk.IntVar(fenetre)
+        
+        TS = Label(fenetre, text = "Starting time")
+        TS.grid(row=13,column=1,sticky=W)
+        TE = Label(fenetre, text = "Ending time")
+        TE.grid(row=14,column=1,sticky=W)
+        CO = Label(fenetre, text= "Orange limit")
+        CO.grid(row=15,column=1,sticky=W)
+        CR = Label(fenetre,text="Red limit")
+        CR.grid(row=16,column=1,sticky=W)
+        
+        timestart = tk.Entry(fenetre, textvariable=user_inputtimMi, width=8)
+        timestart.grid(row = 13, column = 1, sticky=E)
+        timeend = tk.Entry(fenetre,textvariable=user_inputtimMa, width=8)
+        timeend.grid(row = 14, column = 1, sticky=E)
+        limorange=tk.Entry(fenetre,textvariable=user_inputOrange,width=8)
+        limorange.grid(row = 15, column=1,sticky=E)
+        limred = tk.Entry(fenetre,textvariable=user_inputRed,width=8)
+        limred.grid(row=16,column=1,sticky=E)
+        
+        val = Button(fenetre, text='validate', command=lambda arg1=func, arg2=[user_inputtimMi,user_inputtimMa,user_inputOrange,user_inputRed] : Validate(arg1,arg2))
+        val.grid(row = 17, column = 1)
+        
+        listtodel.extend([TS,TE,timestart,timeend,val])
+    
+    if(func == 4):
+        user_inputtimMi = tk.IntVar(fenetre)
+        user_inputtimMa = tk.IntVar(fenetre)
+        
+        TS = Label(fenetre, text = "Starting time")
+        TS.grid(row=13,column=1,sticky=W)
+        TE = Label(fenetre, text = "Ending time")
+        TE.grid(row=14,column=1,sticky=W)
+        
+        timestart = tk.Entry(fenetre, textvariable=user_inputtimMi, width=8)
+        timestart.grid(row = 13, column = 1, sticky=E)
+        timeend = tk.Entry(fenetre,textvariable=user_inputtimMa, width=8)
+        timeend.grid(row = 14, column = 1, sticky=E)
+        
+        val = Button(fenetre, text='validate', command=lambda arg1=func,arg2=[user_inputtimMi,user_inputtimMa] : Validate(arg1,arg2))
+        val.grid(row = 15, column = 1)
+
+        listtodel.extend([TS,TE,timestart,timeend,val])
+        
 Separator(fenetre, orient=VERTICAL).grid(column=2, row=0, rowspan=40, sticky='ns')
 ttk.Sizegrip()
 
@@ -668,15 +861,15 @@ buttonRead.grid(row = 2, column = 1, sticky = W, columnspan = 1)
 
 buttonClear = Button(fenetre, text="Clear Imported Data", command=ClearData).grid(row = 3, column = 1, sticky = W, columnspan = 1)
 def showbuttons():
-    boutonNextworkx=Button(fenetre, text="Graph (new window only)", command=lambda df=MajorData, title = "Graph", degmin=1,widthmin=1,timemin=0,timemax=timestepmax,k=0.1,iterations=50, infeconly=0 : Networkx(df,title,degmin,widthmin,timemin,timemax,k,iterations,infeconly)).grid(row = 4, column = 1, sticky = W, columnspan = 1)
+    boutonNextworkx=Button(fenetre, text="Graph (new window only)", command=lambda df=MajorData, title = "Graph", degmin=1,widthmin=1,timemin=0,timemax=timestepmax,k=0.1,iterations=50, infeconly=0,new=1 : Networkx(df,title,degmin,widthmin,timemin,timemax,k,iterations,infeconly,new)).grid(row = 4, column = 1, sticky = W, columnspan = 1)
 
     #boutonForce_Layout=Button(fenetre, text="Force-Layout", command=lambda arg1 = "the main window", arg2 = "Force-Layout" : ploterT(arg1, arg2)).grid(row = 5, column = 1, sticky = W, columnspan = 1)
 
-    boutonInfection_Map=Button(fenetre, text="Interaction map", command=lambda df = MajorData, title = "Map of interactions" , timemin=0, timemax=50, nbremin=1, sizeref=10000: Map(df,title,timemin,timemax,nbremin,sizeref)).grid(row = 6, column = 1, sticky = W, columnspan = 1)
+    boutonInfection_Map=Button(fenetre, text="Interaction map", command=lambda df = MajorData, title = "Map of interactions" , timemin=0, timemax=50, nbremin=1, sizeref=10000,new=1: Map(df,title,timemin,timemax,nbremin,sizeref,new)).grid(row = 6, column = 1, sticky = W, columnspan = 1)
 
-    boutonInteraction_people=Button(fenetre, text="Interaction/person", command=lambda df = MajorData, title = "Intercation/person" , timemin=0, timemax=timestepmax: BarChart(df,title,timemin,timemax)).grid(row = 5, column = 1, sticky = W, columnspan = 1)
+    boutonInteraction_people=Button(fenetre, text="Interaction/person", command=lambda df = MajorData, title = "Interaction/person" , timemin=0, timemax=timestepmax,orange=75,red=100,new=1: BarChart(df,title,timemin,timemax,orange,red,new)).grid(row = 5, column = 1, sticky = W, columnspan = 1)
 
-    boutonAdjacency_Matrix=Button(fenetre, text="Adjacency matrix", command=lambda df = MajorData, title = "Adjacency matrix" ,timemin=0,timemax=timestepmax: AdjacencyMatrix(df,title,timemin,timemax)).grid(row = 7, column = 1, sticky = W, columnspan = 1)
+    boutonAdjacency_Matrix=Button(fenetre, text="Adjacency matrix", command=lambda df = MajorData, title = "Adjacency matrix" ,timemin=0,timemax=timestepmax,new=1: AdjacencyMatrix(df,title,timemin,timemax,new)).grid(row = 7, column = 1, sticky = W, columnspan = 1)
 
     boutonIntercation_Number=Button(fenetre, text="Number of risky interactions", command=lambda df=MajorData, title = "Number of risky interactions" : Interplot(df, title)).grid(row = 8, column = 1, sticky = W, columnspan = 1)
 def carac():
