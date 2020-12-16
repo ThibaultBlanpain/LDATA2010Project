@@ -76,6 +76,7 @@ btn=None
 MajorData = None
 timestepmax=0
 textvar= None 
+textvar2=None
 arg=None
 quelfig=0
 nodata=1
@@ -212,6 +213,10 @@ def danslafen(title,fig):
 
 def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite,infectedonly,newplot):
     destroyoptions(newplot)
+    global textvar
+    global textvar2
+    textvar=None
+    textvar2=None
     global nodata
     if(nodata==1):
         danslafen("No data",None)
@@ -277,7 +282,20 @@ def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite,infectedonly,newpl
     carac()
     def changeopt():
         global opt
+        global textvar
+        global textvar2
         opt=1-opt
+        if(textvar!=None):
+            textvar.remove() 
+        if(textvar2!=None):
+            textvar2.remove()
+        if(opt==1):
+            textvar=plt.text(0.7,0.7,'select a node')
+            textvar2=plt.text(0.7,0.8,'Shortest path',fontsize=12)
+        if(opt==0):
+            textvar2=plt.text(0.7,0.8,'Home localisation',fontsize=12)
+            
+    
     buttonopt = tk.Button(text="Shortestpath/Home Localisation", command=changeopt)
     buttonopt.grid(row=8,column=4,padx=20,pady=10)
     
@@ -287,6 +305,7 @@ def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite,infectedonly,newpl
     plt.ion()
     fig, ax = plt.subplots()
     plt.title("Graph of interactions with networkx algorithm")
+    changeopt()  
     #nx.draw(G,with_labels=True,font_weight='bold',edge_color=colors, width=weigths)
     art = plot_network(G, layout=spring_layout, ax=ax,node_style=use_attributes(), edge_style=use_attributes())
     #danslafen(title,fig)
@@ -329,7 +348,7 @@ def hilighter(event):
         for node in event.nodes:
           if(textvar!=None):
               textvar.remove()
-          textvar=plt.text(0.7,0.7,'Home localisation \nid=%d \nlong=%f \nlat=%f' %(node,graph.nodes[node]['homelong'],graph.nodes[node]['homelat']),bbox={'facecolor': 'red', 'alpha': 0.5, 'pad': 10})
+          textvar=plt.text(0.7,0.55,'Home localisation \nid=%d \nlong=%f \nlat=%f' %(node,graph.nodes[node]['homelong'],graph.nodes[node]['homelat']),bbox={'facecolor': 'red', 'alpha': 0.5, 'pad': 10})
     global nsp
     global nodebegin
     global nodeend
@@ -739,9 +758,6 @@ def ess(func,new):
         user_inputite = tk.IntVar(fenetre)
         user_inputinf=tk.IntVar(fenetre)
         
-        # entry1 = tk.Entry(fenetre, textvariable=user_input1).grid(row = 12, column = 1)
-        # check = tk.Button(fenetre, text='check 3', command=lambda arg1   = user_input1 : verify(arg1))
-        # check.grid(row = 13, column = 1)
         
         DeMin = Label(fenetre, text = "Minimal degree")
         DeMin.grid(row=13,column=1,sticky=W)
