@@ -91,6 +91,7 @@ label2=None
 button3=None
 entry3=None
 label3=None
+button4=None
 buttonopt=None
 nodescolor={}
 edgescolor={}
@@ -98,6 +99,8 @@ edgeswidth={}
 nodebegin=None
 nodeend=None
 listtodel=[]
+G=None
+posf=None
 
 
 
@@ -213,10 +216,16 @@ def danslafen(title,fig):
 
 def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite,infectedonly,newplot):
     destroyoptions(newplot)
+    global G
+    global posf
     global textvar
     global textvar2
+    global nodescolor
+    global edgescolor
     textvar=None
     textvar2=None
+    nodescolor={}
+    edgescolor={}
     global nodata
     if(nodata==1):
         danslafen("No data",None)
@@ -235,8 +244,8 @@ def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite,infectedonly,newpl
         G.add_node(i,size=50,homelong=0,homelat=0,degtot=0)
     for i in range(M):
         if((df['timestep'][i]>=timestart) and (df['timestep'][i]<=timeend)):
-            pers1=df['person1'][i]
-            pers2=df['person2'][i]
+            pers1=min(df['person1'][i],df['person2'][i])
+            pers2=max(df['person1'][i],df['person2'][i])
             danger=0
             if (df['infected1'][i]!=df['infected2'][i]):
                 danger=1
@@ -294,14 +303,15 @@ def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite,infectedonly,newpl
             textvar2=plt.text(0.7,0.8,'Shortest path',fontsize=12)
         if(opt==0):
             textvar2=plt.text(0.7,0.8,'Home localisation',fontsize=12)
+            textvar=None
             
     
     buttonopt = tk.Button(text="Shortestpath/Home Localisation", command=changeopt)
     buttonopt.grid(row=8,column=4,padx=20,pady=10)
-    
+    posf=nx.spring_layout(G,k=k,iterations=ite)
     def spring_layout(networkx):
-        pos = nx.spring_layout(G,k=k,iterations=ite)
-        return pos
+        #pos = nx.spring_layout(G,k=k,iterations=ite)
+        return posf
     plt.ion()
     fig, ax = plt.subplots()
     plt.title("Graph of interactions with networkx algorithm")
@@ -343,12 +353,9 @@ def hilighter(event):
         node = event.nodes[0]
         nodescolor[node]=graph.nodes[node]['color']
         graph.nodes[node]['color'] = 'red'
-
-         
-        for node in event.nodes:
-          if(textvar!=None):
-              textvar.remove()
-          textvar=plt.text(0.7,0.55,'Home localisation \nid=%d \nlong=%f \nlat=%f' %(node,graph.nodes[node]['homelong'],graph.nodes[node]['homelat']),bbox={'facecolor': 'red', 'alpha': 0.5, 'pad': 10})
+        if(textvar!=None):
+            textvar.remove()
+        textvar=plt.text(0.7,0.55,'Home localisation \nid=%d \nlong=%f \nlat=%f' %(node,graph.nodes[node]['homelong'],graph.nodes[node]['homelat']),bbox={'facecolor': 'red', 'alpha': 0.5, 'pad': 10})
     global nsp
     global nodebegin
     global nodeend
@@ -538,6 +545,9 @@ def Interplot(df,title):
     danslafen(title,fig)
 
 
+
+ 
+
 #(rgb, hx) = colorchooser.askcolor()
 #print(rgb, hx)
 # dash
@@ -633,7 +643,7 @@ def shortestPath(G,node1,node2):
         edgeswidth[edge]=G.edges[edge]['width']
         G.edges[edge]['color']='yellow'
         G.edges[edge]['width']=5
-
+        
 def moreoptions(G):
     global button2
     global entry2
@@ -665,6 +675,27 @@ def moreoptions(G):
         label3.grid(row=4,column=4,padx=20,pady=10,sticky=NE)
     button3 = tk.Button(text='Clustering coefficient n', command=clustercoef)
     button3.grid(row=5,column=4,padx=20,pady=10,sticky=NW)
+    global button4
+    def mst():
+        global G
+        global posf
+        plt.figure()
+        T=nx.minimum_spanning_tree(G)
+        arraycn=[]
+        arraysn=[]
+        #arrayce=[]
+        #arrayse=[]
+        for g in G.nodes(data=True):
+            arraycn.append(g[1]['color'])
+            arraysn.append(g[1]['size'])
+        edges = T.edges()
+        colorst = [G[u][v]['color'] for u,v in edges]
+        widthst = [G[u][v]['width'] for u,v in edges]
+
+        nx.draw(T,posf,node_size=arraysn,node_color=arraycn,edge_color=colorst,width=widthst)
+    button4 = tk.Button(text='Minimum spanning tree', command=mst)
+    button4.grid(row=6,column=4,padx=20,pady=20,sticky=NW)
+    
 
 def destroyoptions(newplot):
     global canvas
@@ -678,6 +709,7 @@ def destroyoptions(newplot):
     global button3
     global entry3
     global label3
+    global button4
     if(canvas!=None):
         canvas.get_tk_widget().destroy()
     if(toolbarFrame!=None):
@@ -697,6 +729,8 @@ def destroyoptions(newplot):
         entry3.destroy()
         if(label3!=None):
             label3.destroy()
+    if(button4!=None):
+        button4.destroy()
     global buttonopt
     if(buttonopt!=None):
         buttonopt.destroy()
@@ -892,21 +926,26 @@ def showbuttons():
     boutonAdjacency_Matrix=Button(fenetre, text="Adjacency matrix", command=lambda df = MajorData, title = "Adjacency matrix" ,timemin=0,timemax=timestepmax,new=1: AdjacencyMatrix(df,title,timemin,timemax,new)).grid(row = 7, column = 1, sticky = W, columnspan = 1)
 
     boutonIntercation_Number=Button(fenetre, text="Number of risky interactions", command=lambda df=MajorData, title = "Number of risky interactions" : Interplot(df, title)).grid(row = 8, column = 1, sticky = W, columnspan = 1)
+
+
+    menubutton = Menubutton(fenetre, text="How to display the graph?")#, activebackground='red')
+    menubutton.grid(row = 10, column = 1, sticky = 'ew', columnspan = 1)
+
+    menubutton.menu = Menu(menubutton, tearoff = 0, bg="red")
+    menubutton["menu"] = menubutton.menu
+
+    menubutton.menu.add_command(label="in the main window", command=lambda arg1 = "the main window": where(arg1))
+    menubutton.menu.add_command(label="in another window", command=lambda arg1 = "another window": where(arg1))
+    menubutton.menu.add_command(label="in the main window and in another window", command=lambda arg1 = "in the main window and in another window": where(arg1))
+    menubutton.menu.add_command(label="remove the graphs of other windows", command=lambda arg1 = "remove the graphs": where(arg1))
+
+
 def carac():
     boutonPlot_Caracteristics=Button(fenetre, text="Caracteristics of the plot ", command=lambda arg1=1: caract(arg1)).grid(row = 9, column = 1, sticky = W, columnspan = 1)
 
 
 
-menubutton = Menubutton(fenetre, text="How to display the graph?")#, activebackground='red')
-menubutton.grid(row = 10, column = 1, sticky = 'ew', columnspan = 1)
-# # Create pull down menu
-menubutton.menu = Menu(menubutton, tearoff = 0, bg="red")
-menubutton["menu"] = menubutton.menu
-# # Add some commands
-menubutton.menu.add_command(label="in the main window", command=lambda arg1 = "the main window": where(arg1))
-menubutton.menu.add_command(label="in another window", command=lambda arg1 = "another window": where(arg1))
-menubutton.menu.add_command(label="in the main window and in another window", command=lambda arg1 = "in the main window and in another window": where(arg1))
-menubutton.menu.add_command(label="remove the graphs of other windows", command=lambda arg1 = "remove the graphs": where(arg1))
+
 
 boutonExit=Button(fenetre, text="Close", command=ExitTotal).grid(row = 11, column = 1, sticky = W, columnspan = 1)
 
