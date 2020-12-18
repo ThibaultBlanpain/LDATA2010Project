@@ -5,6 +5,7 @@ Created on Thu Oct 29 22:27:53 2020
 @author: thibaultblanpain & francoisdawance
 """
 import matplotlib.pyplot as plt 
+import matplotlib.patches as mpatches
 import networkx as nx 
 import numpy as np 
 import pandas as pd
@@ -98,7 +99,7 @@ def ReadFile():
     timestepmax=MajorData['timestep'][len(MajorData['timestep'])-1]
     showbuttons()
     nodata=0
-    danslafen("Data loaded!",None)
+    danslafen("Data loaded",None)
     return
 
 
@@ -108,7 +109,7 @@ def ClearData():
     global nodata
     MajorData = None
     nodata=1
-    danslafen("Data cleared!",None)
+    danslafen("Data cleared",None)
     destroyoptions(1)
     return
 
@@ -169,12 +170,6 @@ def danslafen(title,fig):
         return
 
 
-
-#def waitcursor():
-#    fenetre.config(cursor="watch")
-#    fenetre.update()
-
-
 def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite,infectedonly,newplot):
     destroyoptions(newplot)
     global G
@@ -189,7 +184,7 @@ def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite,infectedonly,newpl
     nodescolor2={}
     global nodata
     if(nodata==1):
-        danslafen("No data!",None)
+        danslafen("No data",None)
         return;
     danslafen("Graph",None)
     global arg
@@ -264,11 +259,11 @@ def Networkx(df,title,degmin,widthmin,timestart,timeend,k,ite,infectedonly,newpl
             textvar=plt.text(0.7,0.7,'select a node')
             textvar2=plt.text(0.7,0.8,'Shortest path',fontsize=12)
         if(opt==0):
-            textvar2=plt.text(0.7,0.8,'Home localisation',fontsize=12)
+            textvar2=plt.text(0.7,0.8,'Home location',fontsize=12)
             textvar=None
             
     
-    buttonopt = tk.Button(text="Shortestpath/Home Localisation", command=changeopt)
+    buttonopt = tk.Button(text="Shortestpath/Home Location", command=changeopt)
     buttonopt.grid(row=5,column=6,padx=20,pady=10)
     posf=nx.spring_layout(G,k=k,iterations=ite)
     def spring_layout(networkx):
@@ -307,7 +302,7 @@ def hilighter(event):
         graph.nodes[node]['color'] = 'red'
         if(textvar!=None):
             textvar.remove()
-        textvar=plt.text(0.7,0.55,'Home localisation \nid=%d \nlong=%f \nlat=%f' %(node,graph.nodes[node]['homelong'],graph.nodes[node]['homelat']),bbox={'facecolor': 'red', 'alpha': 0.5, 'pad': 10})
+        textvar=plt.text(0.7,0.55,'Home location \nid=%d \nlong=%f \nlat=%f' %(node,graph.nodes[node]['homelong'],graph.nodes[node]['homelat']),bbox={'facecolor': 'red', 'alpha': 0.5, 'pad': 10})
     global nsp
     global nodebegin
     global nodeend
@@ -335,8 +330,7 @@ def hilighter(event):
                 textvar.remove()
             nsp=0
             textvar=plt.text(0.7,0.7,'select a node')
-            
-            
+                       
     # update the screen
     event.artist.stale = True
     event.artist.figure.canvas.draw_idle()
@@ -347,7 +341,7 @@ def Map(df,title,timestart,timeend,nbrmin,sizeref,newplot):
     destroyoptions(newplot)
     global nodata
     if(nodata==1):
-        danslafen("No data!",None)
+        danslafen("No data",None)
         return;
     global quelfig
     quelfig=2
@@ -390,11 +384,10 @@ def Map(df,title,timestart,timeend,nbrmin,sizeref,newplot):
     danslafen(title,fig)
 
 def BarChart(df,title,timemin,timemax,orange,red,newplot):
-    print(timemax)
     destroyoptions(newplot)
     global nodata
     if(nodata==1):
-        danslafen("No data!",None)
+        danslafen("No data",None)
         return;
     global quelfig
     quelfig=3
@@ -427,14 +420,17 @@ def BarChart(df,title,timemin,timemax,orange,red,newplot):
                 plt.bar(str(index[i]),nbinter[i], align='center',color='orange')
                 
 
-    
+    red_patch = mpatches.Patch(color='red', label='High number of interactions')
+    orange_patch = mpatches.Patch(color='orange', label='Medium number of interactions')
+    green_patch = mpatches.Patch(color='green', label='Low number of interactions')
+    plt.legend(handles=[red_patch,orange_patch,green_patch])
     danslafen(title,fig)
 
 def AdjacencyMatrix(df,title,timemin,timemax,newplot):
     destroyoptions(newplot)
     global nodata
     if(nodata==1):
-        danslafen("No data!",None)
+        danslafen("No data",None)
         return;
     global quelfig
     quelfig=4
@@ -471,7 +467,7 @@ def Interplot(df,title):
     destroyoptions(1)
     global nodata
     if(nodata==1):
-        danslafen("No data!",None)
+        danslafen("No data",None)
         return;
     global quelfig
     quelfig=5
@@ -535,7 +531,7 @@ def caract(new):
             x2=int(x[1])
             label1 = tk.Label(fenetre, text=arg[x1][x2])
             label1.grid(row=13,column=4,padx=20,pady=10)
-        button1 = tk.Button(text="Format x1,x2", command=getInterx1x2)
+        button1 = tk.Button(text="Format: x1,x2", command=getInterx1x2)
         button1.grid(row=14,column=4,padx=20,pady=10)
     if(quelfig==3):
         entry1=tk.Entry(fenetre)
@@ -595,7 +591,7 @@ def moreoptions(G):
             label3.destroy()
         label3 = tk.Label(fenetre, text=clus)
         label3.grid(row=4,column=4,padx=20,pady=10,sticky=NE)
-    button3 = tk.Button(text='Clustering coefficient n', command=clustercoef)
+    button3 = tk.Button(text='Clustering coefficient of n', command=clustercoef)
     button3.grid(row=5,column=4,padx=20,pady=10,sticky=NW)
     global button4
     def mst():
@@ -665,7 +661,7 @@ def moreoptions(G):
     global button7
     global entry7
     global label7
-    entry7=tk.Entry(fenetre)
+    entry7=tk.Entry(fenetre,width=8)
     entry7.grid(row=10,column=6,padx=20,pady=10,sticky=NE)
     def infonode():
         global G
@@ -675,7 +671,7 @@ def moreoptions(G):
             label7.destroy()
         label7 = tk.Label(fenetre, text=nx.info(arg,n=x))
         label7.grid(row=11,column=6,padx=20,pady=10,sticky=NE)
-    button7 = tk.Button(text='Info node', command=infonode)
+    button7 = tk.Button(text='Neighbours node', command=infonode)
     button7.grid(row=10,column=6,padx=20,pady=10,sticky=NW)
         
     
@@ -729,8 +725,9 @@ def destroyoptions(newplot):
         button6.destroy()
     if(button7!=None):
         button7.destroy()
-        label7.destroy()
         entry7.destroy()
+    if(label7!=None):
+        label7.destroy()
     if(newplot==1):
         global listtodel
         while (listtodel!=[]):
@@ -838,7 +835,7 @@ def ess(func,new):
         TE.grid(row=13,column=1,sticky=W)
         NM = Label(fenetre, text = "Minimal number")
         NM.grid(row=14,column=1,sticky=W)
-        SR = Label(fenetre, text = "Size of reference")
+        SR = Label(fenetre, text = "Reference size")
         SR.grid(row=15,column=1,sticky=W)
         
         timestart = tk.Entry(fenetre, textvariable=user_inputtimS, width=8)
@@ -936,7 +933,7 @@ def showbuttons():
 
 
 def carac():
-    boutonPlot_Caracteristics=Button(fenetre, text="Caracteristics of the plot ", command=lambda arg1=1: caract(arg1)).grid(row = 8, column = 1, sticky = W, columnspan = 1)
+    boutonPlot_Caracteristics=Button(fenetre, text="Characteristics of the plot ", command=lambda arg1=1: caract(arg1)).grid(row = 8, column = 1, sticky = W, columnspan = 1)
 
 
 
